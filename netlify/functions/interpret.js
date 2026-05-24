@@ -32,8 +32,9 @@ exports.handler = async function (event) {
   }
   if (scores.phq9 !== undefined) scoreText += `PHQ-9 depresija (0-27, klinički prag >=10): ${scores.phq9}\n`;
   if (scores.gad7 !== undefined) scoreText += `GAD-7 anksioznost (0-21, klinički prag >=10): ${scores.gad7}\n`;
-  if (scores.rosenberg !== undefined) scoreText += `Rosenberg samopoštovanje (0-30, niže = lošije): ${scores.rosenberg}\n`;
+  if (scores.rosenberg !== undefined) scoreText += `Rosenberg samopoštovanje (0-40, niže = lošije, prag <23): ${scores.rosenberg}\n`;
   if (scores.pcl5 !== undefined) scoreText += `PCL-5 trauma (0-80, klinički prag >=33): ${scores.pcl5}\n`;
+  if (scores.npi16 !== undefined) scoreText += `NPI-16 narcisoidnost (0-16, prosjek 5-9, visoko >=10): ${scores.npi16}\n`;
 
   const userPrompt = `Si iskusni klinički psiholog. Klijent je ispunio psihološku bateriju testova.
 
