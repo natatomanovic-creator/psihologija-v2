@@ -525,15 +525,7 @@ function renderResults(scores, clientName, ai, errMsg) {
   }
 
   if (ai) {
-    html += `<div class="card"><p class="section-title">Interpretacija za klijenta</p><div class="ai-box">${ai.client_text}</div></div>`;
-    html += '<div class="card"><p class="section-title">Klinička napomena za terapeuta</p>';
-    html += `<div class="therapist-box">${ai.therapist_text}</div>`;
-    if (ai.red_flags && ai.red_flags.some(f=>f)) {
-      html += '<div class="red-flags"><div class="red-flag-title">Crvene zastavice</div>';
-      ai.red_flags.filter(f=>f).forEach(f => { html += `<div class="red-flag-item">${f}</div>`; });
-      html += '</div>';
-    }
-    html += '</div>';
+    html += `<div class="card"><p class="section-title">Interpretacija</p><div class="ai-box">${ai.client_text}</div></div>`;
   } else if (errMsg) {
     html += `<div class="card"><div style="color:var(--accent);font-size:14px;">Greška pri analizi: ${errMsg}</div></div>`;
   }
