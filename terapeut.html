@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terapeut · Psihološka procjena</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8;
+      --warm-white: #FAFAF7;
+      --ink: #1A1814;
+      --ink-light: #4A4640;
+      --ink-muted: #8A8680;
+      --accent: #8B4B3C;
+      --accent-bg: #F5EBE8;
+      --teal: #2D6B5E;
+      --teal-bg: #E8F2F0;
+      --border: rgba(26,24,20,0.12);
+      --shadow: 0 2px 20px rgba(26,24,20,0.08);
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 5rem; }
+    .wrapper { max-width: 600px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2.5rem; padding-top: 1rem; }
+    header h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--ink); margin-bottom: 0.4rem; }
+    header p { font-size: 14px; color: var(--ink-muted); font-weight: 300; }
+    .card { background: var(--warm-white); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+    .label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-light); margin-bottom: 8px; }
+    .input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.15s; }
+    .input:focus { border-color: var(--accent); }
+    .section-title { font-size: 11px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .test-opt { padding: 0.9rem 1rem; border: 1.5px solid var(--border); border-radius: 12px; background: var(--cream); cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
+    .test-opt:hover { border-color: var(--accent); }
+    .test-opt.selected { border-color: var(--accent); background: var(--accent-bg); }
+    .test-check { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border); background: var(--warm-white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+    .test-opt.selected .test-check { background: var(--accent); border-color: var(--accent); }
+    .check-icon { display: none; color: white; font-size: 11px; font-weight: 700; }
+    .test-opt.selected .check-icon { display: block; }
+    .to-info { flex: 1; }
+    .to-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .test-opt.selected .to-title { color: var(--accent); }
+    .to-desc { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+    .btn-primary { background: var(--ink); color: var(--cream); border: none; padding: 13px 28px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; width: 100%; margin-top: 1.25rem; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-primary:disabled { background: var(--border); color: var(--ink-muted); cursor: not-allowed; }
+    .link-box { background: var(--cream); border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 16px; font-size: 14px; color: var(--ink-light); word-break: break-all; font-family: monospace; margin-bottom: 1rem; line-height: 1.6; }
+    .btn-copy { background: var(--teal); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; width: 100%; }
+    .btn-copy:hover { opacity: 0.9; }
+    .btn-copy.copied { background: #1A5C4A; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); gap: 12px; }
+    .history-item:last-child { border-bottom: none; }
+    .history-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .history-tests { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+    .history-date { font-size: 12px; color: var(--ink-muted); flex-shrink: 0; }
+    .btn-small { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--cream); color: var(--ink-light); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+    .btn-small:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .empty-state { text-align: center; padding: 1.5rem 0; color: var(--ink-muted); font-size: 14px; font-weight: 300; }
+    #result-section { display: none; }
+    .select-all-row { display: flex; justify-content: flex-end; margin-bottom: 0.75rem; }
+    .btn-link { background: none; border: none; color: var(--accent); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; padding: 0; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <h1>Terapeut</h1>
+    <p>Generirajte link za klijenta</p>
+  </header>
+
+  <div class="card">
+    <label class="label" for="clientName">Ime klijenta</label>
+    <input type="text" id="clientName" class="input" placeholder="npr. Ana Horvat" oninput="onNameInput()">
+  </div>
+
+  <div class="card">
+    <p class="section-title">Odaberite testove</p>
+    <div class="select-all-row">
+      <button class="btn-link" onclick="selectAll()">Odaberi sve</button>
+      &nbsp;·&nbsp;
+      <button class="btn-link" onclick="deselectAll()">Poništi sve</button>
+    </div>
+    <div class="test-grid">
+      <button class="test-opt selected" id="chk-b5" onclick="toggleTest('b5')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">Big Five</div>
+          <div class="to-desc">Ličnost · 10 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt selected" id="chk-attach" onclick="toggleTest('attach')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">Privrženost</div>
+          <div class="to-desc">Attachment · 8 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt selected" id="chk-phq" onclick="toggleTest('phq')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">PHQ-9</div>
+          <div class="to-desc">Depresija · 9 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt selected" id="chk-gad" onclick="toggleTest('gad')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">GAD-7</div>
+          <div class="to-desc">Anksioznost · 7 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt selected" id="chk-ros" onclick="toggleTest('ros')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">Rosenberg</div>
+          <div class="to-desc">Samopoštovanje · 10 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt selected" id="chk-pcl" onclick="toggleTest('pcl')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">PCL-5</div>
+          <div class="to-desc">Trauma · 20 pit.</div>
+        </div>
+      </button>
+      <button class="test-opt" id="chk-npi" onclick="toggleTest('npi')">
+        <div class="test-check"><span class="check-icon">✓</span></div>
+        <div class="to-info">
+          <div class="to-title">NPI-16</div>
+          <div class="to-desc">Narcisoidnost · 16 pit.</div>
+        </div>
+      </button>
+    </div>
+    <button class="btn-primary" id="btn-generate" onclick="generateLink()" disabled>Generiraj link →</button>
+  </div>
+
+  <div class="card" id="result-section">
+    <p class="section-title">Link za klijenta</p>
+    <div class="link-box" id="generated-link"></div>
+    <button class="btn-copy" id="btn-copy" onclick="copyLink()">Kopiraj link</button>
+  </div>
+
+  <div class="card">
+    <p class="section-title">Povijest linkova</p>
+    <div id="history-list">
+      <p class="empty-state">Još nema generiranih linkova.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TESTS = { b5: true, attach: true, phq: true, gad: true, ros: true, pcl: true, npi: false };
+  const TEST_NAMES = { b5:'Big Five', attach:'Privrženost', phq:'PHQ-9', gad:'GAD-7', ros:'Rosenberg', pcl:'PCL-5', npi:'NPI-16' };
+  let history = JSON.parse(localStorage.getItem('therapist_history') || '[]');
+  let currentLink = '';
+
+  function onNameInput() {
+    const name = document.getElementById('clientName').value.trim();
+    document.getElementById('btn-generate').disabled = !name;
+  }
+
+  function toggleTest(key) {
+    TESTS[key] = !TESTS[key];
+    document.getElementById('chk-' + key).classList.toggle('selected', TESTS[key]);
+  }
+
+  function selectAll() {
+    Object.keys(TESTS).forEach(k => { TESTS[k] = true; document.getElementById('chk-' + k).classList.add('selected'); });
+  }
+
+  function deselectAll() {
+    Object.keys(TESTS).forEach(k => { TESTS[k] = false; document.getElementById('chk-' + k).classList.remove('selected'); });
+  }
+
+  function generateLink() {
+    const name = document.getElementById('clientName').value.trim();
+    if (!name) return;
+
+    const selected = Object.keys(TESTS).filter(k => TESTS[k]);
+    if (!selected.length) { alert('Odaberite barem jedan test.'); return; }
+
+    const params = new URLSearchParams();
+    params.set('klijent', name);
+    params.set('testovi', selected.join(','));
+
+    const base = window.location.origin;
+    currentLink = `${base}/index.html?${params.toString()}`;
+
+    document.getElementById('generated-link').textContent = currentLink;
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('btn-copy').textContent = 'Kopiraj link';
+    document.getElementById('btn-copy').classList.remove('copied');
+
+    // Save to history
+    const entry = {
+      name,
+      tests: selected,
+      date: new Date().toLocaleDateString('hr-HR'),
+      link: currentLink,
+    };
+    history.unshift(entry);
+    if (history.length > 20) history = history.slice(0, 20);
+    localStorage.setItem('therapist_history', JSON.stringify(history));
+    renderHistory();
+
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(currentLink).then(() => {
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = '✓ Kopirano!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Kopiraj link';
+        btn.classList.remove('copied');
+      }, 2500);
+    });
+  }
+
+  function copyHistoryLink(link) {
+    navigator.clipboard.writeText(link).then(() => alert('Link kopiran!'));
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('history-list');
+    if (!history.length) {
+      el.innerHTML = '<p class="empty-state">Još nema generiranih linkova.</p>';
+      return;
+    }
+    el.innerHTML = history.map((h, i) => `
+      <div class="history-item">
+        <div>
+          <div class="history-name">${h.name}</div>
+          <div class="history-tests">${h.tests.map(t => TEST_NAMES[t]).join(', ')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="history-date">${h.date}</span>
+          <button class="btn-small" onclick="copyHistoryLink('${h.link}')">Kopiraj</button>
+        </div>
+      </div>`).join('');
+  }
+
+  renderHistory();
+</script>
+</body>
+</html>
