@@ -44,6 +44,16 @@
     .badge-gad { background: #EEF0FB; color: #4A52A0; }
     .badge-ros { background: #F0EBF8; color: #6B3FA0; }
     .badge-pcl { background: #FBF0F0; color: #9A3030; }
+    .badge-npi { background: #EAF0F8; color: #2A5280; }
+    .ab-choice { display: flex; flex-direction: column; gap: 12px; margin-top: 0.5rem; }
+    .ab-label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--cream); transition: all 0.15s; }
+    .ab-label:hover { border-color: var(--accent-light); }
+    .ab-label input[type="radio"] { display: none; }
+    .ab-label.selected { border-color: var(--accent); background: var(--accent-bg); }
+    .ab-letter { font-size: 13px; font-weight: 700; color: var(--ink-muted); width: 20px; flex-shrink: 0; padding-top: 1px; }
+    .ab-label.selected .ab-letter { color: var(--accent); }
+    .ab-text { font-size: 15px; color: var(--ink-light); line-height: 1.5; }
+    .ab-label.selected .ab-text { color: var(--ink); }
     .q-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.55; color: var(--ink); margin-bottom: 0.4rem; }
     .q-hint { font-size: 13px; color: var(--ink-muted); margin-bottom: 1.25rem; font-weight: 300; }
     .likert { display: flex; gap: 8px; }
@@ -121,7 +131,7 @@
 <div class="wrapper">
   <header>
     <h1>Psihološka procjena</h1>
-    <p>Klinička baterija testova</p>
+    <p>Skup kliničkih testova</p>
   </header>
 
   <div id="s-intro" class="screen active">
@@ -160,6 +170,10 @@
         <button class="test-opt selected" id="opt-pcl" onclick="toggleTest('pcl')">
           <div class="to-title">PCL-5 · Trauma</div>
           <div class="to-desc">20 pitanja · ~6 min</div>
+        </button>
+        <button class="test-opt" id="opt-npi" onclick="toggleTest('npi')">
+          <div class="to-title">NPI-16 · Narcisoidnost</div>
+          <div class="to-desc">16 pitanja · ~5 min</div>
         </button>
       </div>
       <button class="btn-primary" onclick="startTest()">Započni procjenu →</button>
@@ -282,11 +296,30 @@ const PCL_Q = [
   "Teškoće s usnivanjem ili spavanjem?",
 ];
 
+const NPI_Q = [
+  { a: "Kada me netko pohvali, ponekad se posramim.", b: "Znam da sam dobar/dobra jer mi svi to govore.", narc: "b" },
+  { a: "Volim se stopiti s gomilom.", b: "Volim biti u središtu pozornosti.", narc: "b" },
+  { a: "Nisam ni bolji/bolja ni lošiji/lošija od većine ljudi.", b: "Mislim da sam posebna osoba.", narc: "b" },
+  { a: "Ne smeta mi slijediti naredbe.", b: "Volim imati autoritet nad drugima.", narc: "b" },
+  { a: "Ne volim kad shvatim da manipuliram drugima.", b: "Lako mi je manipulirati ljudima.", narc: "b" },
+  { a: "Obično dobijem poštovanje koje zaslužujem.", b: "Inzistiram na tome da dobijem poštovanje koje mi pripada.", narc: "b" },
+  { a: "Trudim se ne hvaliti se.", b: "Ako mi se pruži prilika, volim se pokazati.", narc: "b" },
+  { a: "Ponekad nisam siguran/a što radim.", b: "Uvijek znam što radim.", narc: "b" },
+  { a: "Ponekad ispričam dobre priče.", b: "Svi vole slušati moje priče.", narc: "b" },
+  { a: "Volim raditi stvari za druge.", b: "Uglavnom mislim na sebe.", narc: "b" },
+  { a: "Nastojim prihvatiti posljedice svojih postupaka.", b: "Uspijevam izbjeći odgovornost za svoje postupke.", narc: "b" },
+  { a: "Uvijek sam spreman/na slušati tuđe probleme.", b: "Više volim razgovarati o sebi nego slušati tuđe probleme.", narc: "b" },
+  { a: "Pokušavam biti skroman/skromna.", b: "Ja sam izvanredna osoba.", narc: "b" },
+  { a: "Nisam siguran/a hoću li biti dobar/dobra vođa.", b: "Mislim da ću biti dobar/dobra vođa.", narc: "b" },
+  { a: "Moj tjelesni izgled ne zanima me previše.", b: "Uvijek izgledam dobro.", narc: "b" },
+  { a: "Nisam baš siguran/na da se moji pothvati isplate čuti.", b: "Znam da sam iznimna osoba.", narc: "b" },
+];
+
 // ═══════════════════════════════════════
 // STANJE
 // ═══════════════════════════════════════
 
-const SELECTED = { b5:true, attach:true, phq:true, gad:true, ros:true, pcl:true };
+const SELECTED = { b5:true, attach:true, phq:true, gad:true, ros:true, pcl:true, npi:false };
 let allQuestions = [];
 let answers = {};
 let currentQ = 0;
@@ -323,6 +356,7 @@ function buildQuestions() {
   if (SELECTED.gad) GAD_Q.forEach((t,i) => qs.push({text:t, dim:'gad_'+i, rev:false, section:'gad', badge:'badge-gad', label:'GAD-7 · Anksioznost', scale:freq4scale, hints:freq4hints}));
   if (SELECTED.ros) ROS_Q.forEach((q,i) => qs.push({...q, dim:'ros_'+i, section:'ros', badge:'badge-ros', label:'Rosenberg · Samopoštovanje', scale:ros4scale, hints:ros4hints}));
   if (SELECTED.pcl) PCL_Q.forEach((t,i) => qs.push({text:t, dim:'pcl_'+i, rev:false, section:'pcl', badge:'badge-pcl', label:'PCL-5 · Trauma', scale:pcl5scale, hints:pcl5hints}));
+  if (SELECTED.npi) NPI_Q.forEach((q,i) => qs.push({...q, dim:'npi_'+i, section:'npi', badge:'badge-npi', label:'NPI-16 · Narcisoidnost', type:'ab'}));
   return qs;
 }
 
@@ -347,30 +381,54 @@ function renderQuestion() {
   document.getElementById('q-counter').textContent = (currentQ+1) + ' / ' + allQuestions.length;
 
   const saved = answers[currentQ];
-  const hint = q.section === 'phq' || q.section === 'gad'
-    ? 'Tijekom posljednjih 2 tjedna, koliko često vas je uznemiravalo sljedeće?'
-    : q.section === 'pcl'
-    ? 'U posljednjih mjesec dana, koliko vas je uznemiravalo sljedeće?'
-    : 'Koliko se ova tvrdnja odnosi na vas?';
 
-  document.getElementById('q-container').innerHTML = `
-    <div class="card">
-      <span class="badge ${q.badge}">${q.label}</span>
-      <div class="q-text">${q.text}</div>
-      <div class="q-hint">${hint}</div>
-      <div class="likert">
-        ${q.scale.map(v => `
-          <label>
-            <input type="radio" name="qans" value="${v}" ${saved===v?'checked':''} onchange="onAnswer(${v})">
-            <div class="likert-btn">${v}</div>
-          </label>`).join('')}
-      </div>
-      <div class="likert-hints">
-        <span>${q.hints[0]}</span>
-        <span>${q.hints[1]}</span>
-      </div>
-    </div>`;
+  let inner = '';
+  if (q.type === 'ab') {
+    // NPI A/B format
+    inner = `
+      <div class="card">
+        <span class="badge ${q.badge}">${q.label}</span>
+        <div class="q-hint" style="margin-bottom:1rem;">Odaberite tvrdnju koja vas bolje opisuje:</div>
+        <div class="ab-choice">
+          <label class="ab-label ${saved==='a'?'selected':''}" onclick="onAnswerAB('a')">
+            <input type="radio" name="qans" value="a" ${saved==='a'?'checked':''}>
+            <span class="ab-letter">A</span>
+            <span class="ab-text">${q.a}</span>
+          </label>
+          <label class="ab-label ${saved==='b'?'selected':''}" onclick="onAnswerAB('b')">
+            <input type="radio" name="qans" value="b" ${saved==='b'?'checked':''}>
+            <span class="ab-letter">B</span>
+            <span class="ab-text">${q.b}</span>
+          </label>
+        </div>
+      </div>`;
+  } else {
+    const hint = q.section === 'phq' || q.section === 'gad'
+      ? 'Tijekom posljednjih 2 tjedna, koliko često vas je uznemiravalo sljedeće?'
+      : q.section === 'pcl'
+      ? 'U posljednjih mjesec dana, koliko vas je uznemiravalo sljedeće?'
+      : 'Koliko se ova tvrdnja odnosi na vas?';
 
+    inner = `
+      <div class="card">
+        <span class="badge ${q.badge}">${q.label}</span>
+        <div class="q-text">${q.text}</div>
+        <div class="q-hint">${hint}</div>
+        <div class="likert">
+          ${q.scale.map(v => `
+            <label>
+              <input type="radio" name="qans" value="${v}" ${saved===v?'checked':''} onchange="onAnswer(${v})">
+              <div class="likert-btn">${v}</div>
+            </label>`).join('')}
+        </div>
+        <div class="likert-hints">
+          <span>${q.hints[0]}</span>
+          <span>${q.hints[1]}</span>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('q-container').innerHTML = inner;
   document.getElementById('btn-next').disabled = saved === undefined;
   document.getElementById('btn-back').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
   document.getElementById('btn-next').textContent = currentQ === allQuestions.length - 1 ? 'Završi →' : 'Dalje →';
@@ -379,6 +437,14 @@ function renderQuestion() {
 function onAnswer(v) {
   answers[currentQ] = v;
   document.getElementById('btn-next').disabled = false;
+}
+
+function onAnswerAB(val) {
+  answers[currentQ] = val;
+  document.getElementById('btn-next').disabled = false;
+  // Update visual selection
+  document.querySelectorAll('.ab-label').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
 }
 
 function nextQ() {
@@ -428,6 +494,18 @@ function computeScores() {
   if (SELECTED.gad && gadRaw.length) scores.gad7 = gadRaw.reduce((a,b)=>a+b,0);
   if (SELECTED.ros && rosRaw.length) scores.rosenberg = rosRaw.reduce((a,b)=>a+b,0);
   if (SELECTED.pcl && pclRaw.length) scores.pcl5 = pclRaw.reduce((a,b)=>a+b,0);
+
+  // NPI scoring - count narcissistic responses
+  if (SELECTED.npi) {
+    let npiScore = 0;
+    allQuestions.forEach((q, i) => {
+      if (q.section === 'npi') {
+        if (answers[i] === q.narc) npiScore++;
+      }
+    });
+    scores.npi16 = npiScore;
+  }
+
   return scores;
 }
 
@@ -465,6 +543,7 @@ function phqLevel(s) { if(s>=20)return['Teška depresija','high']; if(s>=15)retu
 function gadLevel(s) { if(s>=15)return['Teška anksioznost','high']; if(s>=10)return['Umjerena','high']; if(s>=5)return['Blaga','ok']; return['Minimalna','ok']; }
 function rosLevel(s) { if(s>=35)return['Visoko samopoštovanje','ok']; if(s>=23)return['Prosječno','ok']; return['Nisko samopoštovanje','high']; }
 function pclLevel(s) { return s>=33?['Klinički značajno','high']:['Ispod praga','ok']; }
+function npiLevel(s) { if(s>=14)return['Visoko','high']; if(s>=10)return['Umjereno visoko','high']; if(s>=5)return['Prosječno','ok']; return['Nisko','ok']; }
 
 function renderResults(scores, clientName, ai, errMsg) {
   const date = new Date().toLocaleDateString('hr-HR', {day:'numeric',month:'long',year:'numeric'});
@@ -509,6 +588,7 @@ function renderResults(scores, clientName, ai, errMsg) {
   if (scores.gad7!==undefined) { const [l,c]=gadLevel(scores.gad7); clinRows.push({name:'GAD-7 · Anksioznost',val:scores.gad7,max:21,level:l,cls:c}); }
   if (scores.rosenberg!==undefined) { const [l,c]=rosLevel(scores.rosenberg); clinRows.push({name:'Rosenberg · Samopoštovanje',val:scores.rosenberg,max:40,level:l,cls:c}); }
   if (scores.pcl5!==undefined) { const [l,c]=pclLevel(scores.pcl5); clinRows.push({name:'PCL-5 · Trauma',val:scores.pcl5,max:80,level:l,cls:c}); }
+  if (scores.npi16!==undefined) { const [l,c]=npiLevel(scores.npi16); clinRows.push({name:'NPI-16 · Narcisoidnost',val:scores.npi16,max:16,level:l,cls:c}); }
 
   if (clinRows.length) {
     html += '<div class="card"><p class="section-title">Klinički rezultati</p>';
@@ -594,6 +674,7 @@ function downloadPDF() {
     if (lastScores.gad7!==undefined) scoresText += `GAD-7 (Anksioznost): ${lastScores.gad7}/21\n`;
     if (lastScores.rosenberg!==undefined) scoresText += `Rosenberg (Samopoštovanje): ${lastScores.rosenberg}/40\n`;
     if (lastScores.pcl5!==undefined) scoresText += `PCL-5 (Trauma): ${lastScores.pcl5}/80\n`;
+    if (lastScores.npi16!==undefined) scoresText += `NPI-16 (Narcisoidnost): ${lastScores.npi16}/16\n`;
     if (scoresText) addSection('Klinički rezultati', scoresText);
   }
 
@@ -627,6 +708,7 @@ async function sendEmailBtn() {
     if (lastScores.gad7!==undefined) scoresText += `GAD-7: ${lastScores.gad7}/21\n`;
     if (lastScores.rosenberg!==undefined) scoresText += `Rosenberg: ${lastScores.rosenberg}/40\n`;
     if (lastScores.pcl5!==undefined) scoresText += `PCL-5: ${lastScores.pcl5}/80\n`;
+    if (lastScores.npi16!==undefined) scoresText += `NPI-16: ${lastScores.npi16}/16\n`;
   }
 
   try {
