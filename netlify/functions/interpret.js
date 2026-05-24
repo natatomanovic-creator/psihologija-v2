@@ -48,9 +48,9 @@ exports.handler = async function (event) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return { statusCode: response.status, body: JSON.stringify({ error: data.error?.message || "API greška." }) };
-    }
+   if (!response.ok) {
+  return { statusCode: response.status, body: JSON.stringify({ error: JSON.stringify(data) }) };
+}
 
     const textContent = data.content && data.content.find(c => c.type === "text");
     if (!textContent) {
