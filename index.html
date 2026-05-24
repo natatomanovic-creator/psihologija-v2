@@ -156,23 +156,23 @@
           <div class="to-desc">8 pitanja · ~4 min</div>
         </button>
         <button class="test-opt selected" id="opt-phq" onclick="toggleTest('phq')">
-          <div class="to-title">PHQ-9 · Depresija</div>
+          <div class="to-title">Upitnik o raspoloženju</div>
           <div class="to-desc">9 pitanja · ~3 min</div>
         </button>
         <button class="test-opt selected" id="opt-gad" onclick="toggleTest('gad')">
-          <div class="to-title">GAD-7 · Anksioznost</div>
+          <div class="to-title">Upitnik o brizi</div>
           <div class="to-desc">7 pitanja · ~3 min</div>
         </button>
         <button class="test-opt selected" id="opt-ros" onclick="toggleTest('ros')">
-          <div class="to-title">Rosenberg · Samopoštovanje</div>
+          <div class="to-title">Upitnik o sebi</div>
           <div class="to-desc">10 pitanja · ~4 min</div>
         </button>
         <button class="test-opt selected" id="opt-pcl" onclick="toggleTest('pcl')">
-          <div class="to-title">PCL-5 · Trauma</div>
+          <div class="to-title">Upitnik o stresnim iskustvima</div>
           <div class="to-desc">20 pitanja · ~6 min</div>
         </button>
         <button class="test-opt" id="opt-npi" onclick="toggleTest('npi')">
-          <div class="to-title">NPI-16 · Narcisoidnost</div>
+          <div class="to-title">Upitnik o osobnosti</div>
           <div class="to-desc">16 pitanja · ~5 min</div>
         </button>
       </div>
@@ -335,6 +335,32 @@ function toggleTest(key) {
   document.getElementById('opt-' + key).classList.toggle('selected', SELECTED[key]);
 }
 
+// Čitanje URL parametara (link od terapeuta)
+(function applyURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const klijent = params.get('klijent');
+  const testovi = params.get('testovi');
+  if (klijent) {
+    document.getElementById('clientName').value = klijent;
+  }
+  if (testovi) {
+    Object.keys(SELECTED).forEach(k => {
+      SELECTED[k] = false;
+      const el = document.getElementById('opt-' + k);
+      if (el) el.classList.remove('selected');
+    });
+    testovi.split(',').forEach(t => {
+      const key = t.trim();
+      if (SELECTED.hasOwnProperty(key)) {
+        SELECTED[key] = true;
+        const el = document.getElementById('opt-' + key);
+        if (el) el.classList.add('selected');
+      }
+    });
+    if (klijent) setTimeout(() => startTest(), 200);
+  }
+})();
+
 // ═══════════════════════════════════════
 // GRADNJA PITANJA
 // ═══════════════════════════════════════
@@ -387,7 +413,7 @@ function renderQuestion() {
     // NPI A/B format
     inner = `
       <div class="card">
-        <span class="badge ${q.badge}">${q.label}</span>
+        
         <div class="q-hint" style="margin-bottom:1rem;">Odaberite tvrdnju koja vas bolje opisuje:</div>
         <div class="ab-choice">
           <label class="ab-label ${saved==='a'?'selected':''}" onclick="onAnswerAB('a')">
@@ -411,7 +437,7 @@ function renderQuestion() {
 
     inner = `
       <div class="card">
-        <span class="badge ${q.badge}">${q.label}</span>
+        
         <div class="q-text">${q.text}</div>
         <div class="q-hint">${hint}</div>
         <div class="likert">
