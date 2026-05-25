@@ -143,10 +143,8 @@
         <span class="pill">⏱ 15–25 minuta</span>
         <span class="pill">✓ Validirani upitnici</span>
       </div>
-      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--ink-light)">Vaše ime i inicijal prezimena <span style="color:var(--accent)">*</span></label>
-      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:8px;">npr. Ana K. ili Marko B.</div>
-      <input type="text" id="clientName" class="name-input" placeholder="Ime i inicijal prezimena (npr. Ana K.)">
-      <div id="name-error" style="display:none;font-size:12px;color:var(--accent);margin-top:-10px;margin-bottom:12px;">⚠ Molimo unesite ime i inicijal prezimena (npr. Ana K.)</div>
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--ink-light)">Vaše ime (neobavezno)</label>
+      <input type="text" id="clientName" class="name-input" placeholder="Upišite ime ili ostavite prazno...">
       <p style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px;">Odaberite upitnike:</p>
       <div class="test-grid">
         <button class="test-opt selected" id="opt-b5" onclick="toggleTest('b5')">
@@ -392,20 +390,7 @@ function buildQuestions() {
 // TOK TESTA
 // ═══════════════════════════════════════
 
-function validateName(name) {
-  // Must have at least "Word L." or "Word L" pattern (name + initial)
-  return /^[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]+\s+[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]\.?$/.test(name.trim());
-}
-
 function startTest() {
-  const nameVal = document.getElementById('clientName').value.trim();
-  const nameErr = document.getElementById('name-error');
-  if (!validateName(nameVal)) {
-    nameErr.style.display = 'block';
-    document.getElementById('clientName').focus();
-    return;
-  }
-  nameErr.style.display = 'none';
   if (!Object.values(SELECTED).some(v => v)) { alert('Odaberite barem jedan upitnik.'); return; }
   allQuestions = buildQuestions();
   answers = {};
@@ -569,32 +554,11 @@ async function computeAndFetch() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     aiResult = data;
-    // Save to Netlify Blobs
-    await saveToBlobs(clientName, scores, data);
     renderResults(scores, clientName, data);
   } catch(err) {
     aiResult = null;
     renderResults(scores, clientName, null, err.message);
   }
-}
-
-async function saveToBlobs(clientName, scores, ai) {
-  try {
-    await fetch('/.netlify/functions/save-result', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'psihološki',
-        clientName,
-        date: new Date().toISOString(),
-        scores,
-        interpretation: ai?.client_text || '',
-        therapistNote: ai?.therapist_text || '',
-        redFlags: ai?.red_flags || [],
-        priority: ai?.priority || '',
-      }),
-    });
-  } catch(e) { /* silent fail */ }
 }
 
 // ═══════════════════════════════════════
@@ -700,50 +664,157 @@ function downloadPDF() {
   const doc = new jsPDF({ unit:'mm', format:'a4' });
   const clientName = document.getElementById('clientName')?.value || 'Anonimno';
   const date = new Date().toLocaleDateString('hr-HR');
+  const pageW = 210;
+  const margin = 20;
+  const maxW = pageW - margin * 2; // 170mm
+  let y = 25;
 
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  doc.text('Psihološka procjena', 20, 25);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(11);
-  doc.setTextColor(120,120,120);
-  doc.text(`Klijent: ${clientName}  |  Datum: ${date}`, 20, 35);
-  doc.setTextColor(0,0,0);
-  let y = 48;
+  // Normalize special Croatian characters for helvetica
+  function norm(str) {
+    if (!str) return '';
+    return str
+      .replace(/č/g,'c').replace(/Č/g,'C')
+      .replace(/ć/g,'c').replace(/Ć/g,'C')
+      .replace(/š/g,'s').replace(/Š/g,'S')
+      .replace(/ž/g,'z').replace(/Ž/g,'Z')
+      .replace(/đ/g,'d').replace(/Đ/g,'D')
+      .replace(/[""]/g,'"').replace(/['']/g,"'");
+  }
 
-  function addSection(title, content) {
-    if (y > 260) { doc.addPage(); y = 20; }
+  function checkPage(needed) {
+    if (y + needed > 275) { doc.addPage(); y = 20; }
+  }
+
+  function addTitle(text) {
+    checkPage(12);
     doc.setFont('helvetica','bold');
-    doc.setFontSize(12);
-    doc.text(title, 20, y);
-    y += 7;
+    doc.setFontSize(18);
+    doc.setTextColor(26,24,20);
+    doc.text(norm(text), margin, y);
+    y += 10;
+  }
+
+  function addMeta(text) {
+    checkPage(8);
     doc.setFont('helvetica','normal');
     doc.setFontSize(10);
-    const lines = doc.splitTextToSize(content, 170);
-    lines.forEach(line => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.text(line, 20, y);
-      y += 5.5;
-    });
+    doc.setTextColor(130,130,120);
+    doc.text(norm(text), margin, y);
+    y += 8;
+    // divider line
+    doc.setDrawColor(220,215,205);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+  }
+
+  function addSectionTitle(text) {
+    checkPage(12);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(139,75,60);
+    doc.text(norm(text).toUpperCase(), margin, y);
+    y += 6;
+    doc.setDrawColor(200,190,180);
+    doc.line(margin, y, pageW - margin, y);
     y += 5;
   }
 
-  if (lastScores) {
-    let scoresText = '';
-    if (lastScores.b5) Object.keys(lastScores.b5).forEach(k => { scoresText += `${DIM_NAMES[k]}: ${lastScores.b5[k]}/100\n`; });
-    if (lastScores.attach) { const dom=Object.keys(lastScores.attach).sort((a,b)=>lastScores.attach[b]-lastScores.attach[a])[0]; Object.keys(lastScores.attach).forEach(k => { scoresText += `${ATTACH_NAMES[k]}: ${lastScores.attach[k]}/100${k===dom?' (dominantni)':''}\n`; }); }
-    if (lastScores.phq9!==undefined) scoresText += `PHQ-9 (Depresija): ${lastScores.phq9}/27\n`;
-    if (lastScores.gad7!==undefined) scoresText += `GAD-7 (Anksioznost): ${lastScores.gad7}/21\n`;
-    if (lastScores.rosenberg!==undefined) scoresText += `Rosenberg (Samopoštovanje): ${lastScores.rosenberg}/40\n`;
-    if (lastScores.pcl5!==undefined) scoresText += `PCL-5 (Trauma): ${lastScores.pcl5}/80\n`;
-    if (lastScores.npi16!==undefined) scoresText += `NPI-16 (Narcisoidnost): ${lastScores.npi16}/16\n`;
-    if (scoresText) addSection('Klinički rezultati', scoresText);
+  function addText(text, size, color, indent) {
+    if (!text) return;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(size || 10);
+    doc.setTextColor(...(color || [60,55,50]));
+    const lines = doc.splitTextToSize(norm(text), maxW - (indent||0));
+    lines.forEach(line => {
+      checkPage(6);
+      doc.text(line, margin + (indent||0), y);
+      y += 5.5;
+    });
+    y += 2;
   }
 
-  if (aiResult?.client_text) addSection('Interpretacija za klijenta', aiResult.client_text);
-  if (aiResult?.therapist_text) addSection('Klinička napomena za terapeuta', aiResult.therapist_text);
-  if (aiResult?.red_flags?.some(f=>f)) addSection('Crvene zastavice', aiResult.red_flags.filter(f=>f).join('\n'));
-  if (aiResult?.priority) addSection('Prioritet', aiResult.priority);
+  function addBullet(text) {
+    if (!text) return;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60,55,50);
+    const lines = doc.splitTextToSize(norm(text), maxW - 6);
+    lines.forEach((line, i) => {
+      checkPage(6);
+      if (i === 0) doc.text('•', margin, y);
+      doc.text(line, margin + 5, y);
+      y += 5.5;
+    });
+    y += 1;
+  }
+
+  function addSpacing(mm) { y += mm; }
+
+  // ── HEADER ──
+  addTitle('Psiholoska procjena');
+  addMeta(`Klijent: ${clientName}   |   Datum: ${date}`);
+
+  // ── SCORES ──
+  if (lastScores) {
+    if (lastScores.b5 && Object.keys(lastScores.b5).length) {
+      addSectionTitle('Big Five — Profil licnosti');
+      Object.keys(lastScores.b5).forEach(k => {
+        addText(`${DIM_NAMES[k]}: ${lastScores.b5[k]}/100`);
+      });
+      addSpacing(3);
+    }
+
+    if (lastScores.attach && Object.keys(lastScores.attach).length) {
+      addSectionTitle('Stilovi privrzenosti');
+      const dom = Object.keys(lastScores.attach).sort((a,b)=>lastScores.attach[b]-lastScores.attach[a])[0];
+      Object.keys(lastScores.attach).forEach(k => {
+        addText(`${ATTACH_NAMES[k]}: ${lastScores.attach[k]}/100${k===dom?' (dominantni)':''}`);
+      });
+      addSpacing(3);
+    }
+
+    const clin = [];
+    if (lastScores.phq9!==undefined) clin.push(`PHQ-9 (Depresija): ${lastScores.phq9}/27`);
+    if (lastScores.gad7!==undefined) clin.push(`GAD-7 (Anksioznost): ${lastScores.gad7}/21`);
+    if (lastScores.rosenberg!==undefined) clin.push(`Rosenberg (Samopostovanje): ${lastScores.rosenberg}/40`);
+    if (lastScores.pcl5!==undefined) clin.push(`PCL-5 (Trauma): ${lastScores.pcl5}/80`);
+    if (lastScores.npi16!==undefined) clin.push(`NPI-16 (Narcisoidnost): ${lastScores.npi16}/16`);
+    if (clin.length) {
+      addSectionTitle('Klinicki rezultati');
+      clin.forEach(c => addText(c));
+      addSpacing(3);
+    }
+  }
+
+  // ── AI RESULTS ──
+  if (aiResult?.client_text) {
+    addSectionTitle('Interpretacija za klijenta');
+    addText(aiResult.client_text);
+    addSpacing(3);
+  }
+
+  if (aiResult?.therapist_text) {
+    addSectionTitle('Klinicka napomena za terapeuta');
+    addText(aiResult.therapist_text);
+    addSpacing(3);
+  }
+
+  if (aiResult?.red_flags?.some(f=>f)) {
+    addSectionTitle('Crvene zastavice');
+    aiResult.red_flags.filter(f=>f).forEach(f => addBullet(f));
+    addSpacing(3);
+  }
+
+  if (aiResult?.priority) {
+    addSectionTitle('Prioritet');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    const col = aiResult.priority.toLowerCase() === 'visok' ? [154,48,48] : aiResult.priority.toLowerCase() === 'srednji' ? [184,146,42] : [45,107,94];
+    doc.setTextColor(...col);
+    checkPage(8);
+    doc.text(norm(aiResult.priority).toUpperCase(), margin, y);
+    y += 8;
+  }
 
   doc.save(`procjena_${clientName.replace(/\s+/g,'_')}_${date.replace(/\./g,'-')}.pdf`);
 }
