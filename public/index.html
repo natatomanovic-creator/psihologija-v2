@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Psihološka procjena</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8;
+      --warm-white: #FAFAF7;
+      --ink: #1A1814;
+      --ink-light: #4A4640;
+      --ink-muted: #8A8680;
+      --accent: #8B4B3C;
+      --accent-light: #C4806E;
+      --accent-bg: #F5EBE8;
+      --teal: #2D6B5E;
+      --teal-bg: #E8F2F0;
+      --gold: #B8922A;
+      --gold-bg: #FBF3E0;
+      --border: rgba(26,24,20,0.12);
+      --shadow: 0 2px 20px rgba(26,24,20,0.08);
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 5rem; }
+    .wrapper { max-width: 680px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 3rem; padding-top: 1rem; }
+    header h1 { font-family: 'DM Serif Display', serif; font-size: 2.2rem; color: var(--ink); margin-bottom: 0.4rem; letter-spacing: -0.02em; }
+    header p { font-size: 15px; color: var(--ink-muted); font-weight: 300; }
+    .card { background: var(--warm-white); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .progress-wrap { margin-bottom: 2rem; }
+    .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: var(--ink-muted); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+    .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-b5 { background: var(--accent-bg); color: var(--accent); }
+    .badge-attach { background: var(--teal-bg); color: var(--teal); }
+    .badge-phq { background: var(--gold-bg); color: var(--gold); }
+    .badge-gad { background: #EEF0FB; color: #4A52A0; }
+    .badge-ros { background: #F0EBF8; color: #6B3FA0; }
+    .badge-pcl { background: #FBF0F0; color: #9A3030; }
+    .badge-npi { background: #EAF0F8; color: #2A5280; }
+    .ab-choice { display: flex; flex-direction: column; gap: 12px; margin-top: 0.5rem; }
+    .ab-label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--cream); transition: all 0.15s; }
+    .ab-label:hover { border-color: var(--accent-light); }
+    .ab-label input[type="radio"] { display: none; }
+    .ab-label.selected { border-color: var(--accent); background: var(--accent-bg); }
+    .ab-letter { font-size: 13px; font-weight: 700; color: var(--ink-muted); width: 20px; flex-shrink: 0; padding-top: 1px; }
+    .ab-label.selected .ab-letter { color: var(--accent); }
+    .ab-text { font-size: 15px; color: var(--ink-light); line-height: 1.5; }
+    .ab-label.selected .ab-text { color: var(--ink); }
+    .q-text { font-family: 'DM Serif Display', serif; font-size: 1.2rem; line-height: 1.55; color: var(--ink); margin-bottom: 0.4rem; }
+    .q-hint { font-size: 13px; color: var(--ink-muted); margin-bottom: 1.25rem; font-weight: 300; }
+    .likert { display: flex; gap: 8px; }
+    .likert label { flex: 1; cursor: pointer; }
+    .likert input[type="radio"] { display: none; }
+    .likert-btn { width: 100%; height: 52px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--cream); font-size: 15px; font-weight: 500; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+    .likert input:checked + .likert-btn { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .likert-hints { display: flex; justify-content: space-between; margin-top: 8px; }
+    .likert-hints span { font-size: 11px; color: var(--ink-muted); }
+    .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.75rem; }
+    button { cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .btn-primary { background: var(--ink); color: var(--cream); border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 500; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-primary:disabled { background: var(--border); color: var(--ink-muted); cursor: not-allowed; }
+    .btn-sec { background: transparent; border: 1.5px solid var(--border); color: var(--ink-muted); padding: 12px 20px; border-radius: 10px; font-size: 14px; }
+    .btn-sec:hover { background: var(--cream); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; }
+    .btn-outline:hover { background: var(--ink); color: var(--cream); }
+    .intro-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .intro-desc { font-size: 15px; color: var(--ink-light); line-height: 1.75; margin-bottom: 1.5rem; font-weight: 300; }
+    .name-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 16px; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); margin-bottom: 1.5rem; outline: none; transition: border-color 0.15s; }
+    .name-input:focus { border-color: var(--accent); }
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+    .test-opt { padding: 1rem; border: 1.5px solid var(--border); border-radius: 12px; background: var(--cream); cursor: pointer; text-align: left; transition: all 0.15s; }
+    .test-opt:hover { border-color: var(--accent-light); }
+    .test-opt.selected { border-color: var(--accent); background: var(--accent-bg); }
+    .to-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+    .test-opt.selected .to-title { color: var(--accent); }
+    .to-desc { font-size: 11px; color: var(--ink-muted); }
+    .info-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .pill { font-size: 12px; padding: 4px 12px; border-radius: 20px; background: var(--cream); border: 0.5px solid var(--border); color: var(--ink-muted); }
+    .section-title { font-size: 11px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+    .dim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .dim-label { font-size: 13px; color: var(--ink-light); width: 120px; flex-shrink: 0; }
+    .dim-track { flex: 1; height: 6px; background: var(--cream); border-radius: 3px; overflow: hidden; }
+    .dim-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+    .dim-val { font-size: 14px; font-weight: 600; color: var(--ink); width: 32px; text-align: right; }
+    .attach-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 0.5rem; }
+    .attach-card { padding: 1rem; border-radius: 10px; border: 0.5px solid var(--border); background: var(--cream); text-align: center; }
+    .attach-card.dominant { border: 2px solid var(--teal); background: var(--teal-bg); }
+    .ac-name { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px; }
+    .attach-card.dominant .ac-name { color: var(--teal); }
+    .ac-val { font-size: 24px; font-weight: 600; color: var(--ink); }
+    .attach-card.dominant .ac-val { color: var(--teal); }
+    .score-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .score-row:last-child { border-bottom: none; }
+    .score-name { font-size: 14px; color: var(--ink-light); }
+    .score-val { font-size: 16px; font-weight: 600; }
+    .score-val.high { color: var(--accent); }
+    .score-val.ok { color: var(--teal); }
+    .score-level { font-size: 11px; font-weight: 500; margin-top: 2px; text-align: right; }
+    .ai-box { border-left: 3px solid var(--accent); padding: 1rem 1.25rem; font-size: 15px; line-height: 1.8; color: var(--ink-light); font-weight: 300; }
+    .therapist-box { background: var(--accent-bg); border-radius: 12px; padding: 1.25rem; font-size: 14px; line-height: 1.8; color: var(--ink-light); }
+    .red-flags { background: #FBF0F0; border-radius: 12px; padding: 1rem 1.25rem; margin-top: 0.75rem; }
+    .red-flag-title { font-size: 12px; font-weight: 600; color: #9A3030; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .red-flag-item { font-size: 13px; color: #7A2020; margin-bottom: 4px; padding-left: 1.25rem; position: relative; }
+    .red-flag-item::before { content: "⚠"; position: absolute; left: 0; }
+    .priority-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 0.75rem; }
+    .priority-visok { background: #FBF0F0; color: #9A3030; }
+    .priority-srednji { background: var(--gold-bg); color: var(--gold); }
+    .priority-nizak { background: var(--teal-bg); color: var(--teal); }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem; }
+    .email-status { font-size: 13px; color: var(--ink-muted); margin-top: 0.75rem; min-height: 20px; }
+    .loading-wrap { text-align: center; padding: 3rem 0; }
+    .loading-text { font-size: 16px; color: var(--ink-muted); margin-bottom: 1rem; font-weight: 300; }
+    .dots { display: flex; gap: 8px; justify-content: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+    @media(max-width:480px) { .test-grid { grid-template-columns: 1fr; } .likert-btn { height: 46px; font-size: 14px; } header h1 { font-size: 1.8rem; } }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <h1>Psihološka procjena</h1>
+    <p>Skup kliničkih testova</p>
+  </header>
+
+  <div id="s-intro" class="screen active">
+    <div class="card">
+      <p class="intro-title">Dobro došli</p>
+      <p class="intro-desc">Molimo vas da iskreno odgovorite na pitanja. Rezultati su povjerljivi i namijenjeni isključivo vašem terapeutu. Nema točnih ni netočnih odgovora.</p>
+      <div class="info-pills">
+        <span class="pill">🔒 Povjerljivo</span>
+        <span class="pill">⏱ 15–25 minuta</span>
+        <span class="pill">✓ Validirani upitnici</span>
+      </div>
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--ink-light)">Vaše ime (neobavezno)</label>
+      <input type="text" id="clientName" class="name-input" placeholder="Upišite ime ili ostavite prazno...">
+      <p style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px;">Odaberite upitnike:</p>
+      <div class="test-grid">
+        <button class="test-opt selected" id="opt-b5" onclick="toggleTest('b5')">
+          <div class="to-title">Big Five ličnost</div>
+          <div class="to-desc">10 pitanja · ~5 min</div>
+        </button>
+        <button class="test-opt selected" id="opt-attach" onclick="toggleTest('attach')">
+          <div class="to-title">Stilovi privrženosti</div>
+          <div class="to-desc">8 pitanja · ~4 min</div>
+        </button>
+        <button class="test-opt selected" id="opt-phq" onclick="toggleTest('phq')">
+          <div class="to-title">Upitnik o raspoloženju</div>
+          <div class="to-desc">9 pitanja · ~3 min</div>
+        </button>
+        <button class="test-opt selected" id="opt-gad" onclick="toggleTest('gad')">
+          <div class="to-title">Upitnik o brizi</div>
+          <div class="to-desc">7 pitanja · ~3 min</div>
+        </button>
+        <button class="test-opt selected" id="opt-ros" onclick="toggleTest('ros')">
+          <div class="to-title">Upitnik o sebi</div>
+          <div class="to-desc">10 pitanja · ~4 min</div>
+        </button>
+        <button class="test-opt selected" id="opt-pcl" onclick="toggleTest('pcl')">
+          <div class="to-title">Upitnik o stresnim iskustvima</div>
+          <div class="to-desc">20 pitanja · ~6 min</div>
+        </button>
+        <button class="test-opt" id="opt-npi" onclick="toggleTest('npi')">
+          <div class="to-title">Upitnik o osobnosti</div>
+          <div class="to-desc">16 pitanja · ~5 min</div>
+        </button>
+      </div>
+      <button class="btn-primary" onclick="startTest()">Započni procjenu →</button>
+    </div>
+  </div>
+
+  <div id="s-questions" class="screen">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="prog-section"></span>
+        <span id="q-counter"></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    </div>
+    <div id="q-container"></div>
+    <div class="nav-row">
+      <button class="btn-sec" id="btn-back" onclick="prevQ()">← Nazad</button>
+      <button class="btn-primary" id="btn-next" onclick="nextQ()" disabled>Dalje →</button>
+    </div>
+  </div>
+
+  <div id="s-loading" class="screen">
+    <div class="card">
+      <div class="loading-wrap">
+        <p class="loading-text">Analiziram rezultate...</p>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-results" class="screen">
+    <div id="results-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// PITANJA
+// ═══════════════════════════════════════
+
+const B5_Q = [
+  { text: "Vidim sebe kao osobu koja je razgovorljiva i društvena.", dim:"E", rev:false },
+  { text: "Sklon/a sam se brinuti zbog različitih stvari.", dim:"N", rev:false },
+  { text: "Volim maštati i razmišljati o apstraktnim idejama.", dim:"O", rev:false },
+  { text: "Lako mi je oprostiti drugima.", dim:"A", rev:false },
+  { text: "Dovodim svaki posao do kraja — uvijek sam temeljit/a.", dim:"C", rev:false },
+  { text: "Uglavnom sam rezerviran/a i tih/a.", dim:"E", rev:true },
+  { text: "Ostaje mi na umu stres iz prošlosti.", dim:"N", rev:false },
+  { text: "Draža mi je rutina nego promjene.", dim:"O", rev:true },
+  { text: "Ponekad budem grub/a prema drugima.", dim:"A", rev:true },
+  { text: "Imam tendenciju biti uredan/na i organiziran/na.", dim:"C", rev:false },
+];
+
+const ATTACH_Q = [
+  { text: "Lako mi se emocionalno otvoriti i blisko povezati s drugima.", dim:"secure", rev:false },
+  { text: "Brinem se da će me bliski ljudi napustiti.", dim:"anxious", rev:false },
+  { text: "Neugodno mi je kad sam ovisan/ovisna o drugima.", dim:"avoidant", rev:false },
+  { text: "Teško mi je u potpunosti vjerovati partnerima i prijateljima.", dim:"fearful", rev:false },
+  { text: "Osjećam se ugodno bez bliske emocionalne veze.", dim:"avoidant", rev:false },
+  { text: "Stalno provjeravam jesu li mi bliski ljudi dostupni.", dim:"anxious", rev:false },
+  { text: "Kada me netko povrijedi, lako se vraćam povjerenju.", dim:"secure", rev:false },
+  { text: "Blizina s drugima me ponekad plaši, ali je i privlači.", dim:"fearful", rev:false },
+];
+
+const PHQ_Q = [
+  "Smanjen interes ili zadovoljstvo u obavljanju uobičajenih stvari",
+  "Imali ste osjećaj potištenosti, depresije ili beznađa",
+  "Teško ste zaspali, ili ste loše spavali, ili ste pak previše spavali",
+  "Osjećaj umora ili nedostatka energije",
+  "Bili ste oslabljenog apetita ili se prejedali",
+  "Loš osjećaj u svezi sebe samog – ili da niste uspjeli u životu, ili da ste iznevjerili sebe ili svoju obitelj",
+  "Poteškoće s koncentracijom, npr. prilikom čitanja novina ili gledanja televizije",
+  "Kretali ste se ili razgovarali usporeno tako da su to mogli i drugi primijetiti? Ili naprotiv – bili usplahireni ili nemirni, tako da ste se morali kretati više nego uobičajeno",
+  "Razmišljali ste kako bi bilo bolje da ste mrtvi ili da se ozlijedite na neki način",
+];
+
+const GAD_Q = [
+  "Osjećaj nervoze, tjeskobe ili da ste na rubu sa živcima",
+  "Nemogućnost kontroliranja zabrinutosti",
+  "Naglašena zabrinutost za više različitih stvari",
+  "Problemi s opuštanjem",
+  "Osjećaj tolikog nemira koji uzrokuje poteškoće u svakodnevnim aktivnostima, poput nemogućnosti sjedenja",
+  "Iznenadna ljutnja ili razdražljivost",
+  "Osjećaj da bi se nešto strašno moglo dogoditi",
+];
+
+const ROS_Q = [
+  { text: "Sve u svemu sam zadovoljna/zadovoljan sama/sam sa sobom.", rev:false },
+  { text: "Povremeno mislim da ništa ne valjam.", rev:true },
+  { text: "Osjećam da imam poprilično dobrih osobina.", rev:false },
+  { text: "U stanju sam obavljati zadatke jednako dobro kao većina drugih ljudi.", rev:false },
+  { text: "Osjećam da nema puno toga čime se mogu ponositi.", rev:true },
+  { text: "Doista se ponekad osjećam beskorisno.", rev:true },
+  { text: "Osjećam da vrijedim barem jednako kao i ostali.", rev:false },
+  { text: "Volio/Voljela bih da mogu sebe više poštovati.", rev:true },
+  { text: "Sve u svemu sam sklon/a o sebi misliti kao gubitniku.", rev:true },
+  { text: "Prema sebi zauzimam pozitivan stav.", rev:false },
+];
+
+const PCL_Q = [
+  "Ponavljajuća, uznemirujuća sjećanja, misli ili slike o stresnom iskustvu?",
+  "Uznemirujući snovi o stresnom iskustvu?",
+  "Najednom se osjećate ili ponašate kao da se stresno iskustvo ponovo odvija?",
+  "Uznemirenost kada vas nešto podsjeti na stresno iskustvo?",
+  "Snažne tjelesne reakcije kada vas nešto podsjeti na stresno iskustvo (lupanje srca, otežano disanje, znojenje)?",
+  "Izbjegavanje misli ili osjećaja vezanih uz stresno iskustvo?",
+  "Izbjegavanje vanjskih podsjetnika na stresno iskustvo (ljudi, mjesta, razgovori, aktivnosti, predmeti, situacije)?",
+  "Teškoće s prisjećanjem važnih dijelova stresnog iskustva?",
+  "Snažna negativna uvjerenja o sebi, drugima ili svijetu?",
+  "Okrivljavanje sebe ili drugih za stresno iskustvo ili njegove posljedice?",
+  "Snažni negativni osjećaji kao što su strah, užas, ljutnja, krivnja ili sram?",
+  "Gubitak interesa za aktivnosti koje ste nekad uživali?",
+  "Osjećaj udaljenosti ili odvojenosti od drugih ljudi?",
+  "Nemogućnost doživljavanja pozitivnih osjećaja (npr. sreće, ljubavi)?",
+  "Razdražljivo ponašanje, ispadi ljutnje ili agresija?",
+  "Preuzimanje pretjeranih rizika ili činjenje stvari koje bi vas mogle ozlijediti?",
+  "Pretjerana budnost ili opreznost?",
+  "Osjećaj stalne napetosti ili potrebe da budete na oprezu?",
+  "Poteškoće s koncentracijom?",
+  "Teškoće s usnivanjem ili spavanjem?",
+];
+
+const NPI_Q = [
+  { a: "Kada me netko pohvali, ponekad se posramim.", b: "Znam da sam dobar/dobra jer mi svi to govore.", narc: "b" },
+  { a: "Volim se stopiti s gomilom.", b: "Volim biti u središtu pozornosti.", narc: "b" },
+  { a: "Nisam ni bolji/bolja ni lošiji/lošija od većine ljudi.", b: "Mislim da sam posebna osoba.", narc: "b" },
+  { a: "Ne smeta mi slijediti naredbe.", b: "Volim imati autoritet nad drugima.", narc: "b" },
+  { a: "Ne volim kad shvatim da manipuliram drugima.", b: "Lako mi je manipulirati ljudima.", narc: "b" },
+  { a: "Obično dobijem poštovanje koje zaslužujem.", b: "Inzistiram na tome da dobijem poštovanje koje mi pripada.", narc: "b" },
+  { a: "Trudim se ne hvaliti se.", b: "Ako mi se pruži prilika, volim se pokazati.", narc: "b" },
+  { a: "Ponekad nisam siguran/a što radim.", b: "Uvijek znam što radim.", narc: "b" },
+  { a: "Ponekad ispričam dobre priče.", b: "Svi vole slušati moje priče.", narc: "b" },
+  { a: "Volim raditi stvari za druge.", b: "Uglavnom mislim na sebe.", narc: "b" },
+  { a: "Nastojim prihvatiti posljedice svojih postupaka.", b: "Uspijevam izbjeći odgovornost za svoje postupke.", narc: "b" },
+  { a: "Uvijek sam spreman/na slušati tuđe probleme.", b: "Više volim razgovarati o sebi nego slušati tuđe probleme.", narc: "b" },
+  { a: "Pokušavam biti skroman/skromna.", b: "Ja sam izvanredna osoba.", narc: "b" },
+  { a: "Nisam siguran/a hoću li biti dobar/dobra vođa.", b: "Mislim da ću biti dobar/dobra vođa.", narc: "b" },
+  { a: "Moj tjelesni izgled ne zanima me previše.", b: "Uvijek izgledam dobro.", narc: "b" },
+  { a: "Nisam baš siguran/na da se moji pothvati isplate čuti.", b: "Znam da sam iznimna osoba.", narc: "b" },
+];
+
+// ═══════════════════════════════════════
+// STANJE
+// ═══════════════════════════════════════
+
+const SELECTED = { b5:true, attach:true, phq:true, gad:true, ros:true, pcl:true, npi:false };
+let allQuestions = [];
+let answers = {};
+let currentQ = 0;
+let aiResult = null;
+let lastScores = null;
+
+const DIM_NAMES = { E:'Ekstraverzija', N:'Neuroticizam', O:'Otvorenost', A:'Ugodnost', C:'Savjesnost' };
+const DIM_COLORS = { E:'#8B4B3C', N:'#C4806E', O:'#2D6B5E', A:'#D4537E', C:'#4A52A0' };
+const ATTACH_NAMES = { secure:'Siguran', anxious:'Anksiozni', avoidant:'Izbjegavajući', fearful:'Plašljivi' };
+
+function toggleTest(key) {
+  SELECTED[key] = !SELECTED[key];
+  document.getElementById('opt-' + key).classList.toggle('selected', SELECTED[key]);
+}
+
+// Čitanje URL parametara (link od terapeuta)
+(function applyURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const klijent = params.get('klijent');
+  const testovi = params.get('testovi');
+  if (klijent) {
+    document.getElementById('clientName').value = klijent;
+  }
+  if (testovi) {
+    Object.keys(SELECTED).forEach(k => {
+      SELECTED[k] = false;
+      const el = document.getElementById('opt-' + k);
+      if (el) el.classList.remove('selected');
+    });
+    testovi.split(',').forEach(t => {
+      const key = t.trim();
+      if (SELECTED.hasOwnProperty(key)) {
+        SELECTED[key] = true;
+        const el = document.getElementById('opt-' + key);
+        if (el) el.classList.add('selected');
+      }
+    });
+    if (klijent) setTimeout(() => startTest(), 200);
+  }
+})();
+
+// ═══════════════════════════════════════
+// GRADNJA PITANJA
+// ═══════════════════════════════════════
+
+function buildQuestions() {
+  const qs = [];
+  const b5scale = [1,2,3,4,5];
+  const b5hints = ['Uopće se ne slažem','U potpunosti se slažem'];
+  const freq4scale = [0,1,2,3];
+  const freq4hints = ['Uopće ne','Skoro svaki dan'];
+  const ros4scale = [0,1,2,3];
+  const ros4hints = ['Potpuno netočno','Potpuno točno'];
+  const pcl5scale = [0,1,2,3,4];
+  const pcl5hints = ['Uopće ne','Izrazito'];
+
+  if (SELECTED.b5) B5_Q.forEach(q => qs.push({...q, section:'b5', badge:'badge-b5', label:'Big Five · Ličnost', scale:b5scale, hints:b5hints}));
+  if (SELECTED.attach) ATTACH_Q.forEach(q => qs.push({...q, section:'attach', badge:'badge-attach', label:'Stilovi privrženosti', scale:b5scale, hints:['Uopće se ne odnosi','U potpunosti se odnosi']}));
+  if (SELECTED.phq) PHQ_Q.forEach((t,i) => qs.push({text:t, dim:'phq_'+i, rev:false, section:'phq', badge:'badge-phq', label:'PHQ-9 · Depresija', scale:freq4scale, hints:freq4hints}));
+  if (SELECTED.gad) GAD_Q.forEach((t,i) => qs.push({text:t, dim:'gad_'+i, rev:false, section:'gad', badge:'badge-gad', label:'GAD-7 · Anksioznost', scale:freq4scale, hints:freq4hints}));
+  if (SELECTED.ros) ROS_Q.forEach((q,i) => qs.push({...q, dim:'ros_'+i, section:'ros', badge:'badge-ros', label:'Rosenberg · Samopoštovanje', scale:ros4scale, hints:ros4hints}));
+  if (SELECTED.pcl) PCL_Q.forEach((t,i) => qs.push({text:t, dim:'pcl_'+i, rev:false, section:'pcl', badge:'badge-pcl', label:'PCL-5 · Trauma', scale:pcl5scale, hints:pcl5hints}));
+  if (SELECTED.npi) NPI_Q.forEach((q,i) => qs.push({...q, dim:'npi_'+i, section:'npi', badge:'badge-npi', label:'NPI-16 · Narcisoidnost', type:'ab'}));
+  return qs;
+}
+
+// ═══════════════════════════════════════
+// TOK TESTA
+// ═══════════════════════════════════════
+
+function startTest() {
+  if (!Object.values(SELECTED).some(v => v)) { alert('Odaberite barem jedan upitnik.'); return; }
+  allQuestions = buildQuestions();
+  answers = {};
+  currentQ = 0;
+  showScreen('s-questions');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = allQuestions[currentQ];
+  const pct = Math.round((currentQ / allQuestions.length) * 100);
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('prog-section').textContent = q.label;
+  document.getElementById('q-counter').textContent = (currentQ+1) + ' / ' + allQuestions.length;
+
+  const saved = answers[currentQ];
+
+  let inner = '';
+  if (q.type === 'ab') {
+    // NPI A/B format
+    inner = `
+      <div class="card">
+        
+        <div class="q-hint" style="margin-bottom:1rem;">Odaberite tvrdnju koja vas bolje opisuje:</div>
+        <div class="ab-choice">
+          <label class="ab-label ${saved==='a'?'selected':''}" onclick="onAnswerAB('a')">
+            <input type="radio" name="qans" value="a" ${saved==='a'?'checked':''}>
+            <span class="ab-letter">A</span>
+            <span class="ab-text">${q.a}</span>
+          </label>
+          <label class="ab-label ${saved==='b'?'selected':''}" onclick="onAnswerAB('b')">
+            <input type="radio" name="qans" value="b" ${saved==='b'?'checked':''}>
+            <span class="ab-letter">B</span>
+            <span class="ab-text">${q.b}</span>
+          </label>
+        </div>
+      </div>`;
+  } else {
+    const hint = q.section === 'phq' || q.section === 'gad'
+      ? 'Tijekom posljednjih 2 tjedna, koliko često vas je uznemiravalo sljedeće?'
+      : q.section === 'pcl'
+      ? 'U posljednjih mjesec dana, koliko vas je uznemiravalo sljedeće?'
+      : 'Koliko se ova tvrdnja odnosi na vas?';
+
+    inner = `
+      <div class="card">
+        
+        <div class="q-text">${q.text}</div>
+        <div class="q-hint">${hint}</div>
+        <div class="likert">
+          ${q.scale.map(v => `
+            <label>
+              <input type="radio" name="qans" value="${v}" ${saved===v?'checked':''} onchange="onAnswer(${v})">
+              <div class="likert-btn">${v}</div>
+            </label>`).join('')}
+        </div>
+        <div class="likert-hints">
+          <span>${q.hints[0]}</span>
+          <span>${q.hints[1]}</span>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('q-container').innerHTML = inner;
+  document.getElementById('btn-next').disabled = saved === undefined;
+  document.getElementById('btn-back').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  document.getElementById('btn-next').textContent = currentQ === allQuestions.length - 1 ? 'Završi →' : 'Dalje →';
+}
+
+function onAnswer(v) {
+  answers[currentQ] = v;
+  document.getElementById('btn-next').disabled = false;
+}
+
+function onAnswerAB(val) {
+  answers[currentQ] = val;
+  document.getElementById('btn-next').disabled = false;
+  // Update visual selection
+  document.querySelectorAll('.ab-label').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+function nextQ() {
+  if (answers[currentQ] === undefined) return;
+  if (currentQ < allQuestions.length - 1) { currentQ++; renderQuestion(); }
+  else computeAndFetch();
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+// ═══════════════════════════════════════
+// RAČUNANJE REZULTATA
+// ═══════════════════════════════════════
+
+function computeScores() {
+  const b5raw = {E:[],N:[],O:[],A:[],C:[]};
+  const atRaw = {secure:[],anxious:[],avoidant:[],fearful:[]};
+  const phqRaw=[], gadRaw=[], rosRaw=[], pclRaw=[];
+
+  allQuestions.forEach((q,i) => {
+    const raw = answers[i] ?? 0;
+    const val = q.rev ? (q.scale[q.scale.length-1] - raw + q.scale[0]) : raw;
+    if (q.section==='b5') b5raw[q.dim].push(val);
+    else if (q.section==='attach') atRaw[q.dim].push(val);
+    else if (q.section==='phq') phqRaw.push(val);
+    else if (q.section==='gad') gadRaw.push(val);
+    else if (q.section==='ros') rosRaw.push(val);
+    else if (q.section==='pcl') pclRaw.push(val);
+  });
+
+  const scores = {};
+  if (SELECTED.b5) {
+    scores.b5 = {};
+    Object.keys(b5raw).forEach(k => {
+      if (b5raw[k].length) scores.b5[k] = Math.round((b5raw[k].reduce((a,b)=>a+b,0)/b5raw[k].length)*20);
+    });
+  }
+  if (SELECTED.attach) {
+    scores.attach = {};
+    Object.keys(atRaw).forEach(k => {
+      if (atRaw[k].length) scores.attach[k] = Math.round((atRaw[k].reduce((a,b)=>a+b,0)/atRaw[k].length)*20);
+    });
+  }
+  if (SELECTED.phq && phqRaw.length) scores.phq9 = phqRaw.reduce((a,b)=>a+b,0);
+  if (SELECTED.gad && gadRaw.length) scores.gad7 = gadRaw.reduce((a,b)=>a+b,0);
+  if (SELECTED.ros && rosRaw.length) scores.rosenberg = rosRaw.reduce((a,b)=>a+b,0);
+  if (SELECTED.pcl && pclRaw.length) scores.pcl5 = pclRaw.reduce((a,b)=>a+b,0);
+
+  // NPI scoring - count narcissistic responses
+  if (SELECTED.npi) {
+    let npiScore = 0;
+    allQuestions.forEach((q, i) => {
+      if (q.section === 'npi') {
+        if (answers[i] === q.narc) npiScore++;
+      }
+    });
+    scores.npi16 = npiScore;
+  }
+
+  return scores;
+}
+
+// ═══════════════════════════════════════
+// AI DOHVAT
+// ═══════════════════════════════════════
+
+async function computeAndFetch() {
+  showScreen('s-loading');
+  const scores = computeScores();
+  lastScores = scores;
+  const clientName = document.getElementById('clientName').value.trim() || 'Anonimno';
+
+  try {
+    const res = await fetch('/.netlify/functions/interpret', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientName, scores }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    aiResult = data;
+    renderResults(scores, clientName, data);
+  } catch(err) {
+    aiResult = null;
+    renderResults(scores, clientName, null, err.message);
+  }
+}
+
+// ═══════════════════════════════════════
+// PRIKAZ REZULTATA
+// ═══════════════════════════════════════
+
+function phqLevel(s) { if(s>=20)return['Teška depresija','high']; if(s>=15)return['Umjereno teška','high']; if(s>=10)return['Umjerena','high']; if(s>=5)return['Blaga','ok']; return['Minimalna','ok']; }
+function gadLevel(s) { if(s>=15)return['Teška anksioznost','high']; if(s>=10)return['Umjerena','high']; if(s>=5)return['Blaga','ok']; return['Minimalna','ok']; }
+function rosLevel(s) { if(s>=35)return['Visoko samopoštovanje','ok']; if(s>=23)return['Prosječno','ok']; return['Nisko samopoštovanje','high']; }
+function pclLevel(s) { return s>=33?['Klinički značajno','high']:['Ispod praga','ok']; }
+function npiLevel(s) { if(s>=14)return['Visoko','high']; if(s>=10)return['Umjereno visoko','high']; if(s>=5)return['Prosječno','ok']; return['Nisko','ok']; }
+
+function renderResults(scores, clientName, ai, errMsg) {
+  const date = new Date().toLocaleDateString('hr-HR', {day:'numeric',month:'long',year:'numeric'});
+  let html = '<div id="result-print">';
+
+  html += `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:4px;">Rezultati procjene</h2>
+        <p style="font-size:13px;color:var(--ink-muted);">${clientName} · ${date}</p>
+      </div>
+      ${ai?.priority ? `<span class="priority-badge priority-${ai.priority.toLowerCase()}">Prioritet: ${ai.priority}</span>` : ''}
+    </div>
+  </div>`;
+
+  if (scores.b5 && Object.keys(scores.b5).length) {
+    html += '<div class="card"><p class="section-title">Big Five · Profil ličnosti</p>';
+    Object.keys(scores.b5).forEach(k => {
+      html += `<div class="dim-row">
+        <span class="dim-label">${DIM_NAMES[k]}</span>
+        <div class="dim-track"><div class="dim-fill" style="width:${scores.b5[k]}%;background:${DIM_COLORS[k]};"></div></div>
+        <span class="dim-val">${scores.b5[k]}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (scores.attach && Object.keys(scores.attach).length) {
+    const dom = Object.keys(scores.attach).sort((a,b)=>scores.attach[b]-scores.attach[a])[0];
+    html += '<div class="card"><p class="section-title">Stilovi privrženosti</p><div class="attach-grid">';
+    Object.keys(scores.attach).forEach(k => {
+      html += `<div class="attach-card ${k===dom?'dominant':''}">
+        <div class="ac-name">${ATTACH_NAMES[k]}</div>
+        <div class="ac-val">${scores.attach[k]}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  const clinRows = [];
+  if (scores.phq9!==undefined) { const [l,c]=phqLevel(scores.phq9); clinRows.push({name:'PHQ-9 · Depresija',val:scores.phq9,max:27,level:l,cls:c}); }
+  if (scores.gad7!==undefined) { const [l,c]=gadLevel(scores.gad7); clinRows.push({name:'GAD-7 · Anksioznost',val:scores.gad7,max:21,level:l,cls:c}); }
+  if (scores.rosenberg!==undefined) { const [l,c]=rosLevel(scores.rosenberg); clinRows.push({name:'Rosenberg · Samopoštovanje',val:scores.rosenberg,max:40,level:l,cls:c}); }
+  if (scores.pcl5!==undefined) { const [l,c]=pclLevel(scores.pcl5); clinRows.push({name:'PCL-5 · Trauma',val:scores.pcl5,max:80,level:l,cls:c}); }
+  if (scores.npi16!==undefined) { const [l,c]=npiLevel(scores.npi16); clinRows.push({name:'NPI-16 · Narcisoidnost',val:scores.npi16,max:16,level:l,cls:c}); }
+
+  if (clinRows.length) {
+    html += '<div class="card"><p class="section-title">Klinički rezultati</p>';
+    clinRows.forEach(r => {
+      html += `<div class="score-row">
+        <span class="score-name">${r.name}</span>
+        <div style="text-align:right;">
+          <span class="score-val ${r.cls}">${r.val}<span style="font-size:12px;font-weight:400;color:var(--ink-muted)">/${r.max}</span></span>
+          <div class="score-level" style="color:${r.cls==='high'?'var(--accent)':'var(--teal)'};">${r.level}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (ai) {
+    html += `<div class="card"><p class="section-title">Interpretacija</p><div class="ai-box">${ai.client_text}</div></div>`;
+  } else if (errMsg) {
+    html += `<div class="card"><div style="color:var(--accent);font-size:14px;">Greška pri analizi: ${errMsg}</div></div>`;
+  }
+
+  html += '</div>';
+  html += `<div class="action-row">
+    <button class="btn-primary" onclick="downloadPDF()">⬇ Preuzmi PDF</button>
+    <button class="btn-outline" id="btn-email" onclick="sendEmailBtn()">✉ Pošalji na email</button>
+    <button class="btn-outline" onclick="resetTest()">↺ Novi test</button>
+  </div>
+  <p class="email-status" id="email-status"></p>`;
+
+  document.getElementById('results-content').innerHTML = html;
+  showScreen('s-results');
+
+  setTimeout(() => {
+    document.querySelectorAll('.dim-fill').forEach(el => {
+      const w = el.style.width; el.style.width = '0%';
+      setTimeout(() => { el.style.width = w; }, 50);
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════
+// PDF
+// ═══════════════════════════════════════
+
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const clientName = document.getElementById('clientName')?.value || 'Anonimno';
+  const date = new Date().toLocaleDateString('hr-HR');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.text('Psihološka procjena', 20, 25);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11);
+  doc.setTextColor(120,120,120);
+  doc.text(`Klijent: ${clientName}  |  Datum: ${date}`, 20, 35);
+  doc.setTextColor(0,0,0);
+  let y = 48;
+
+  function addSection(title, content) {
+    if (y > 260) { doc.addPage(); y = 20; }
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text(title, 20, y);
+    y += 7;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(content, 170);
+    lines.forEach(line => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.text(line, 20, y);
+      y += 5.5;
+    });
+    y += 5;
+  }
+
+  if (lastScores) {
+    let scoresText = '';
+    if (lastScores.b5) Object.keys(lastScores.b5).forEach(k => { scoresText += `${DIM_NAMES[k]}: ${lastScores.b5[k]}/100\n`; });
+    if (lastScores.attach) { const dom=Object.keys(lastScores.attach).sort((a,b)=>lastScores.attach[b]-lastScores.attach[a])[0]; Object.keys(lastScores.attach).forEach(k => { scoresText += `${ATTACH_NAMES[k]}: ${lastScores.attach[k]}/100${k===dom?' (dominantni)':''}\n`; }); }
+    if (lastScores.phq9!==undefined) scoresText += `PHQ-9 (Depresija): ${lastScores.phq9}/27\n`;
+    if (lastScores.gad7!==undefined) scoresText += `GAD-7 (Anksioznost): ${lastScores.gad7}/21\n`;
+    if (lastScores.rosenberg!==undefined) scoresText += `Rosenberg (Samopoštovanje): ${lastScores.rosenberg}/40\n`;
+    if (lastScores.pcl5!==undefined) scoresText += `PCL-5 (Trauma): ${lastScores.pcl5}/80\n`;
+    if (lastScores.npi16!==undefined) scoresText += `NPI-16 (Narcisoidnost): ${lastScores.npi16}/16\n`;
+    if (scoresText) addSection('Klinički rezultati', scoresText);
+  }
+
+  if (aiResult?.client_text) addSection('Interpretacija za klijenta', aiResult.client_text);
+  if (aiResult?.therapist_text) addSection('Klinička napomena za terapeuta', aiResult.therapist_text);
+  if (aiResult?.red_flags?.some(f=>f)) addSection('Crvene zastavice', aiResult.red_flags.filter(f=>f).join('\n'));
+  if (aiResult?.priority) addSection('Prioritet', aiResult.priority);
+
+  doc.save(`procjena_${clientName.replace(/\s+/g,'_')}_${date.replace(/\./g,'-')}.pdf`);
+}
+
+// ═══════════════════════════════════════
+// EMAIL
+// ═══════════════════════════════════════
+
+emailjs.init('2Oj2zHu81YpB4REAX');
+
+async function sendEmailBtn() {
+  const btn = document.getElementById('btn-email');
+  const status = document.getElementById('email-status');
+  btn.disabled = true;
+  btn.textContent = 'Šaljem...';
+
+  const clientName = document.getElementById('clientName')?.value || 'Anonimno';
+  const date = new Date().toLocaleDateString('hr-HR');
+  let scoresText = '';
+  if (lastScores) {
+    if (lastScores.b5) Object.keys(lastScores.b5).forEach(k => { scoresText += `${DIM_NAMES[k]}: ${lastScores.b5[k]}/100\n`; });
+    if (lastScores.attach) Object.keys(lastScores.attach).forEach(k => { scoresText += `${ATTACH_NAMES[k]}: ${lastScores.attach[k]}/100\n`; });
+    if (lastScores.phq9!==undefined) scoresText += `PHQ-9: ${lastScores.phq9}/27\n`;
+    if (lastScores.gad7!==undefined) scoresText += `GAD-7: ${lastScores.gad7}/21\n`;
+    if (lastScores.rosenberg!==undefined) scoresText += `Rosenberg: ${lastScores.rosenberg}/40\n`;
+    if (lastScores.pcl5!==undefined) scoresText += `PCL-5: ${lastScores.pcl5}/80\n`;
+    if (lastScores.npi16!==undefined) scoresText += `NPI-16: ${lastScores.npi16}/16\n`;
+  }
+
+  try {
+    await emailjs.send('service_phwb8mv', 'template_2xcu5by', {
+      client_name: clientName,
+      date: date,
+      scores: scoresText || '—',
+      client_text: aiResult?.client_text || '—',
+      therapist_text: aiResult?.therapist_text || '—',
+      red_flags: aiResult?.red_flags?.filter(f=>f).join('\n') || 'Nema',
+      priority: aiResult?.priority || '—',
+      to_email: 'nata.tomanovic@gmail.com',
+    });
+    btn.textContent = '✓ Poslano';
+    status.textContent = 'Email poslan na nata.tomanovic@gmail.com';
+    status.style.color = 'var(--teal)';
+  } catch(err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '✉ Pošalji na email';
+    status.textContent = 'Greška pri slanju — provjeri EmailJS postavke.';
+    status.style.color = 'var(--accent)';
+  }
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+
+function resetTest() { showScreen('s-intro'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
