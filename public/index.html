@@ -143,8 +143,10 @@
         <span class="pill">⏱ 15–25 minuta</span>
         <span class="pill">✓ Validirani upitnici</span>
       </div>
-      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--ink-light)">Vaše ime (neobavezno)</label>
-      <input type="text" id="clientName" class="name-input" placeholder="Upišite ime ili ostavite prazno...">
+      <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--ink-light)">Vaše ime i inicijal prezimena <span style="color:var(--accent)">*</span></label>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:8px;">npr. Ana K. ili Marko B.</div>
+      <input type="text" id="clientName" class="name-input" placeholder="Ime i inicijal prezimena (npr. Ana K.)">
+      <div id="name-error" style="display:none;font-size:12px;color:var(--accent);margin-top:-10px;margin-bottom:12px;">⚠ Molimo unesite ime i inicijal prezimena (npr. Ana K.)</div>
       <p style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px;">Odaberite upitnike:</p>
       <div class="test-grid">
         <button class="test-opt selected" id="opt-b5" onclick="toggleTest('b5')">
@@ -390,7 +392,20 @@ function buildQuestions() {
 // TOK TESTA
 // ═══════════════════════════════════════
 
+function validateName(name) {
+  // Must have at least "Word L." or "Word L" pattern (name + initial)
+  return /^[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]+\s+[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]\.?$/.test(name.trim());
+}
+
 function startTest() {
+  const nameVal = document.getElementById('clientName').value.trim();
+  const nameErr = document.getElementById('name-error');
+  if (!validateName(nameVal)) {
+    nameErr.style.display = 'block';
+    document.getElementById('clientName').focus();
+    return;
+  }
+  nameErr.style.display = 'none';
   if (!Object.values(SELECTED).some(v => v)) { alert('Odaberite barem jedan upitnik.'); return; }
   allQuestions = buildQuestions();
   answers = {};
@@ -554,11 +569,32 @@ async function computeAndFetch() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     aiResult = data;
+    // Save to Netlify Blobs
+    await saveToBlobs(clientName, scores, data);
     renderResults(scores, clientName, data);
   } catch(err) {
     aiResult = null;
     renderResults(scores, clientName, null, err.message);
   }
+}
+
+async function saveToBlobs(clientName, scores, ai) {
+  try {
+    await fetch('/.netlify/functions/save-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'psihološki',
+        clientName,
+        date: new Date().toISOString(),
+        scores,
+        interpretation: ai?.client_text || '',
+        therapistNote: ai?.therapist_text || '',
+        redFlags: ai?.red_flags || [],
+        priority: ai?.priority || '',
+      }),
+    });
+  } catch(e) { /* silent fail */ }
 }
 
 // ═══════════════════════════════════════

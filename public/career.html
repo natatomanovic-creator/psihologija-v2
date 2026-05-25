@@ -591,8 +591,10 @@ body::before {
       <p class="section-desc">Nema točnih ni pogrešnih odgovora. Odgovarajte iskreno — rezultati su povjerljivi i namijenjeni vašem coachu.</p>
     </div>
     <div class="name-wrap">
-      <label>Vaše ime (neobavezno)</label>
-      <input type="text" id="clientName" placeholder="Upišite ime ili ostavite prazno...">
+      <label>Ime i inicijal prezimena <span style="color:var(--gold)">*</span></label>
+      <div style="font-size:0.75rem;color:var(--text-faint);margin-bottom:0.5rem;">npr. Ana K. ili Marko B.</div>
+      <input type="text" id="clientName" placeholder="Ime i inicijal prezimena (npr. Ana K.)">
+      <div id="name-error" style="display:none;font-size:0.8rem;color:#c94c4c;margin-top:0.4rem;">⚠ Molimo unesite ime i inicijal prezimena (npr. Ana K.)</div>
     </div>
     <div class="nav-row">
       <button class="btn-next" onclick="goNext(0)">Počnimo →</button>
@@ -853,7 +855,21 @@ function showSection(id) {
   document.getElementById(id).classList.add('active');
 }
 
+function validateName(name) {
+  return /^[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]+\s+[A-Za-zÀ-ÖØ-öø-žČčĆćŠšŽžĐđ]\.?$/.test(name.trim());
+}
+
 function goNext(from) {
+  if (from === 0) {
+    const nameVal = document.getElementById('clientName').value.trim();
+    const nameErr = document.getElementById('name-error');
+    if (!validateName(nameVal)) {
+      nameErr.style.display = 'block';
+      document.getElementById('clientName').focus();
+      return;
+    }
+    nameErr.style.display = 'none';
+  }
   // Validate
   if (from === 1) {
     if (Object.keys(riasecAnswers).filter(k => !k.startsWith('_')).length < riasecItems.length) {
@@ -984,6 +1000,24 @@ Piši direktno klijentu (u drugom licu).`;
   } catch (e) {
     interpretation = 'Interpretacija trenutno nije dostupna. Vaš coach će vas kontaktirati s detaljnom analizom.';
   }
+
+  // Save to Netlify Blobs
+  try {
+    await fetch('/.netlify/functions/save-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'karijerni',
+        clientName: name,
+        date: new Date().toISOString(),
+        riasec: riasecText,
+        values: valuesText,
+        anxiety: anxietyText,
+        swot: swotData,
+        interpretation,
+      }),
+    });
+  } catch(e) { /* silent fail */ }
 
   // Send email
   let emailOk = false;

@@ -1,248 +1,686 @@
 <!DOCTYPE html>
 <html lang="hr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terapeut · Psihološka procjena</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --cream: #F5F0E8;
-      --warm-white: #FAFAF7;
-      --ink: #1A1814;
-      --ink-light: #4A4640;
-      --ink-muted: #8A8680;
-      --accent: #8B4B3C;
-      --accent-bg: #F5EBE8;
-      --teal: #2D6B5E;
-      --teal-bg: #E8F2F0;
-      --border: rgba(26,24,20,0.12);
-      --shadow: 0 2px 20px rgba(26,24,20,0.08);
-    }
-    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 5rem; }
-    .wrapper { max-width: 600px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2.5rem; padding-top: 1rem; }
-    header h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--ink); margin-bottom: 0.4rem; }
-    header p { font-size: 14px; color: var(--ink-muted); font-weight: 300; }
-    .card { background: var(--warm-white); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
-    .label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-light); margin-bottom: 8px; }
-    .input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.15s; }
-    .input:focus { border-color: var(--accent); }
-    .section-title { font-size: 11px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
-    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .test-opt { padding: 0.9rem 1rem; border: 1.5px solid var(--border); border-radius: 12px; background: var(--cream); cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
-    .test-opt:hover { border-color: var(--accent); }
-    .test-opt.selected { border-color: var(--accent); background: var(--accent-bg); }
-    .test-check { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border); background: var(--warm-white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
-    .test-opt.selected .test-check { background: var(--accent); border-color: var(--accent); }
-    .check-icon { display: none; color: white; font-size: 11px; font-weight: 700; }
-    .test-opt.selected .check-icon { display: block; }
-    .to-info { flex: 1; }
-    .to-title { font-size: 13px; font-weight: 600; color: var(--ink); }
-    .test-opt.selected .to-title { color: var(--accent); }
-    .to-desc { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
-    .btn-primary { background: var(--ink); color: var(--cream); border: none; padding: 13px 28px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; width: 100%; margin-top: 1.25rem; }
-    .btn-primary:hover { background: var(--accent); }
-    .btn-primary:disabled { background: var(--border); color: var(--ink-muted); cursor: not-allowed; }
-    .link-box { background: var(--cream); border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 16px; font-size: 14px; color: var(--ink-light); word-break: break-all; font-family: monospace; margin-bottom: 1rem; line-height: 1.6; }
-    .btn-copy { background: var(--teal); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; width: 100%; }
-    .btn-copy:hover { opacity: 0.9; }
-    .btn-copy.copied { background: #1A5C4A; }
-    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); gap: 12px; }
-    .history-item:last-child { border-bottom: none; }
-    .history-name { font-size: 14px; font-weight: 500; color: var(--ink); }
-    .history-tests { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
-    .history-date { font-size: 12px; color: var(--ink-muted); flex-shrink: 0; }
-    .btn-small { font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--cream); color: var(--ink-light); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
-    .btn-small:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
-    .empty-state { text-align: center; padding: 1.5rem 0; color: var(--ink-muted); font-size: 14px; font-weight: 300; }
-    #result-section { display: none; }
-    .select-all-row { display: flex; justify-content: flex-end; margin-bottom: 0.75rem; }
-    .btn-link { background: none; border: none; color: var(--accent); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; padding: 0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Terapeut</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F0E8;
+  --warm-white: #FAFAF7;
+  --ink: #1A1814;
+  --ink-light: #4A4640;
+  --ink-muted: #8A8680;
+  --accent: #8B4B3C;
+  --accent-light: #C4806E;
+  --accent-bg: #F5EBE8;
+  --teal: #2D6B5E;
+  --teal-bg: #E8F2F0;
+  --gold: #B8922A;
+  --gold-bg: #FBF3E0;
+  --border: rgba(26,24,20,0.12);
+  --shadow: 0 2px 20px rgba(26,24,20,0.08);
+  --career-bg: #1a1a2e;
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+
+.site-header span {
+  font-size: 0.78rem;
+  color: rgba(245,240,232,0.5);
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - 60px);
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--warm-white);
+  padding: 1.5rem 0;
+  overflow-y: auto;
+}
+
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.client-item {
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.client-item:hover { background: var(--cream); }
+.client-item.active { border-left-color: var(--accent); background: var(--accent-bg); }
+
+.ci-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.client-item.active .ci-name { color: var(--accent); }
+
+.ci-meta {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ci-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ci-badge.psih { background: var(--accent-bg); color: var(--accent); }
+.ci-badge.kar { background: var(--gold-bg); color: var(--gold); }
+
+.sidebar-empty {
+  padding: 1.5rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+/* ── MAIN ── */
+.main {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--ink-muted);
+}
+
+.empty-state h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--ink-light);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+/* ── CLIENT VIEW ── */
+.client-header {
+  margin-bottom: 2rem;
+}
+
+.client-header h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.client-header-meta {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+/* ── ENTRY ── */
+.entry {
+  background: var(--warm-white);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.entry-type {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.entry-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.entry-badge.psih { background: var(--accent-bg); color: var(--accent); }
+.entry-badge.kar { background: var(--gold-bg); color: var(--gold); }
+
+.entry-date {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.entry-priority {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.priority-visok { background: #FBF0F0; color: #9A3030; }
+.priority-srednji { background: var(--gold-bg); color: var(--gold); }
+.priority-nizak { background: var(--teal-bg); color: var(--teal); }
+
+/* ── SCORES ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.dim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.dim-label { font-size: 13px; color: var(--ink-light); width: 140px; flex-shrink: 0; }
+.dim-track { flex: 1; height: 5px; background: var(--cream); border-radius: 3px; overflow: hidden; }
+.dim-fill { height: 100%; border-radius: 3px; }
+.dim-val { font-size: 13px; font-weight: 600; color: var(--ink); width: 30px; text-align: right; }
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.score-box {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.score-box-name { font-size: 11px; color: var(--ink-muted); margin-bottom: 4px; }
+.score-box-val { font-size: 1.2rem; font-weight: 600; color: var(--ink); }
+.score-box-level { font-size: 11px; font-weight: 500; margin-top: 2px; }
+.level-high { color: var(--accent); }
+.level-ok { color: var(--teal); }
+
+/* ── TEXT SECTIONS ── */
+.text-block {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--ink-light);
+}
+
+.red-flags-box {
+  background: #FBF0F0;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.red-flag-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9A3030;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.red-flag-item {
+  font-size: 0.83rem;
+  color: #7A2020;
+  margin-bottom: 3px;
+  padding-left: 1.1rem;
+  position: relative;
+}
+.red-flag-item::before { content: "⚠"; position: absolute; left: 0; }
+
+/* ── SWOT ── */
+.swot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+@media (max-width: 500px) { .swot-grid { grid-template-columns: 1fr; } }
+
+.swot-box {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.swot-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.swot-lbl.s { color: var(--teal); }
+.swot-lbl.w { color: var(--accent); }
+.swot-lbl.o { color: #4A52A0; }
+.swot-lbl.t { color: var(--gold); }
+
+.swot-text { font-size: 0.83rem; color: var(--ink-light); line-height: 1.5; }
+
+/* ── RIASEC ── */
+.riasec-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.riasec-name { font-size: 12px; color: var(--ink-light); width: 130px; flex-shrink: 0; }
+.riasec-track { flex: 1; height: 5px; background: var(--cream); border-radius: 3px; overflow: hidden; }
+.riasec-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #e8c97a); border-radius: 3px; }
+.riasec-val { font-size: 12px; color: var(--ink-muted); width: 32px; text-align: right; }
+
+/* ── LOADING ── */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+/* ── COLLAPSIBLE ── */
+.collapse-btn {
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.75rem;
+  text-decoration: underline;
+}
+.collapse-btn:hover { color: var(--ink); }
+
+.collapsible { display: none; margin-top: 1rem; }
+.collapsible.open { display: block; }
+
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 1.25rem 0; }
+
+/* ── REFRESH ── */
+.refresh-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0 1.25rem 1rem;
+}
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
 </head>
 <body>
-<div class="wrapper">
-  <header>
-    <h1>Terapeut</h1>
-    <p>Generirajte link za klijenta</p>
-  </header>
 
-  <div class="card">
-    <label class="label" for="clientName">Ime klijenta</label>
-    <input type="text" id="clientName" class="input" placeholder="npr. Ana Horvat" oninput="onNameInput()">
-  </div>
+<header class="site-header">
+  <h1>Dashboard — Terapeut</h1>
+  <span>Psihološki i karijerni profili</span>
+</header>
 
-  <div class="card">
-    <p class="section-title">Odaberite testove</p>
-    <div class="select-all-row">
-      <button class="btn-link" onclick="selectAll()">Odaberi sve</button>
-      &nbsp;·&nbsp;
-      <button class="btn-link" onclick="deselectAll()">Poništi sve</button>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Klijenti</div>
+    <button class="refresh-btn" onclick="loadClients()">↺ Osvježi</button>
+    <div id="clientList"><div class="sidebar-empty">Učitavam...</div></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainPanel">
+    <div class="empty-state">
+      <h2>Odaberite klijenta</h2>
+      <p>Svi klijenti koji ispune test automatski se<br>pojavljuju u lijevom izborniku.</p>
     </div>
-    <div class="test-grid">
-      <button class="test-opt selected" id="chk-b5" onclick="toggleTest('b5')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">Big Five</div>
-          <div class="to-desc">Ličnost · 10 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt selected" id="chk-attach" onclick="toggleTest('attach')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">Privrženost</div>
-          <div class="to-desc">Attachment · 8 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt selected" id="chk-phq" onclick="toggleTest('phq')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">PHQ-9</div>
-          <div class="to-desc">Depresija · 9 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt selected" id="chk-gad" onclick="toggleTest('gad')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">GAD-7</div>
-          <div class="to-desc">Anksioznost · 7 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt selected" id="chk-ros" onclick="toggleTest('ros')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">Rosenberg</div>
-          <div class="to-desc">Samopoštovanje · 10 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt selected" id="chk-pcl" onclick="toggleTest('pcl')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">PCL-5</div>
-          <div class="to-desc">Trauma · 20 pit.</div>
-        </div>
-      </button>
-      <button class="test-opt" id="chk-npi" onclick="toggleTest('npi')">
-        <div class="test-check"><span class="check-icon">✓</span></div>
-        <div class="to-info">
-          <div class="to-title">NPI-16</div>
-          <div class="to-desc">Narcisoidnost · 16 pit.</div>
-        </div>
-      </button>
-    </div>
-    <button class="btn-primary" id="btn-generate" onclick="generateLink()" disabled>Generiraj link →</button>
-  </div>
-
-  <div class="card" id="result-section">
-    <p class="section-title">Link za klijenta</p>
-    <div class="link-box" id="generated-link"></div>
-    <button class="btn-copy" id="btn-copy" onclick="copyLink()">Kopiraj link</button>
-  </div>
-
-  <div class="card">
-    <p class="section-title">Povijest linkova</p>
-    <div id="history-list">
-      <p class="empty-state">Još nema generiranih linkova.</p>
-    </div>
-  </div>
+  </main>
 </div>
 
 <script>
-  const TESTS = { b5: true, attach: true, phq: true, gad: true, ros: true, pcl: true, npi: false };
-  const TEST_NAMES = { b5:'Big Five', attach:'Privrženost', phq:'PHQ-9', gad:'GAD-7', ros:'Rosenberg', pcl:'PCL-5', npi:'NPI-16' };
-  let history = JSON.parse(localStorage.getItem('therapist_history') || '[]');
-  let currentLink = '';
+const DIM_NAMES = { E:'Ekstraverzija', N:'Neuroticizam', O:'Otvorenost', A:'Ugodnost', C:'Savjesnost' };
+const DIM_COLORS = { E:'#8B4B3C', N:'#C4806E', O:'#2D6B5E', A:'#D4537E', C:'#4A52A0' };
+const ATTACH_NAMES = { secure:'Siguran', anxious:'Anksiozni', avoidant:'Izbjegavajući', fearful:'Plašljivi' };
 
-  function onNameInput() {
-    const name = document.getElementById('clientName').value.trim();
-    document.getElementById('btn-generate').disabled = !name;
+let allClients = [];
+let activeKey = null;
+
+// ── LOAD CLIENTS ──────────────────────────────────────
+
+async function loadClients() {
+  document.getElementById('clientList').innerHTML = '<div class="sidebar-empty">Učitavam...</div>';
+  try {
+    const res = await fetch('/.netlify/functions/list-results');
+    allClients = await res.json();
+    renderSidebar();
+  } catch(e) {
+    document.getElementById('clientList').innerHTML = '<div class="sidebar-empty">Greška pri učitavanju.</div>';
+  }
+}
+
+function renderSidebar() {
+  const el = document.getElementById('clientList');
+  if (!allClients.length) {
+    el.innerHTML = '<div class="sidebar-empty">Još nema klijenata. Rezultati će se pojaviti čim klijent završi test.</div>';
+    return;
+  }
+  el.innerHTML = allClients.map(c => `
+    <div class="client-item ${c.key === activeKey ? 'active' : ''}" onclick="selectClient('${c.key}')">
+      <div class="ci-name">${c.name}</div>
+      <div class="ci-meta">
+        <span>${formatDate(c.lastUpdated)}</span>
+        ${c.types.includes('psihološki') ? '<span class="ci-badge psih">psiho</span>' : ''}
+        ${c.types.includes('karijerni') ? '<span class="ci-badge kar">karijera</span>' : ''}
+        <span>${c.entryCount} test${c.entryCount === 1 ? '' : 'ova'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── SELECT CLIENT ─────────────────────────────────────
+
+async function selectClient(key) {
+  activeKey = key;
+  renderSidebar();
+  document.getElementById('mainPanel').innerHTML = '<div class="loading">Učitavam podatke...</div>';
+
+  try {
+    const res = await fetch(`/.netlify/functions/list-results?client=${key}`);
+    const data = await res.json();
+    if (!data) throw new Error('Nema podataka');
+    renderClient(data);
+  } catch(e) {
+    document.getElementById('mainPanel').innerHTML = `<div class="loading">Greška: ${e.message}</div>`;
+  }
+}
+
+// ── RENDER CLIENT ─────────────────────────────────────
+
+function renderClient(data) {
+  const entries = (data.entries || []).slice().reverse(); // newest first
+  let html = `
+    <div class="client-header">
+      <h2>${data.name}</h2>
+      <div class="client-header-meta">${entries.length} test${entries.length === 1 ? '' : 'ova'} · Zadnji: ${formatDate(data.lastUpdated)}</div>
+    </div>`;
+
+  entries.forEach((entry, i) => {
+    html += renderEntry(entry, i);
+  });
+
+  document.getElementById('mainPanel').innerHTML = html;
+}
+
+function renderEntry(entry, idx) {
+  const isPsih = entry.type === 'psihološki';
+  const date = formatDate(entry.savedAt || entry.date);
+
+  let html = `<div class="entry">
+    <div class="entry-header">
+      <div class="entry-type">
+        <span class="entry-badge ${isPsih ? 'psih' : 'kar'}">${isPsih ? 'Psihološki test' : 'Karijerni profil'}</span>
+        <span class="entry-date">${date}</span>
+      </div>
+      ${entry.priority ? `<span class="entry-priority priority-${entry.priority.toLowerCase()}">Prioritet: ${entry.priority}</span>` : ''}
+    </div>`;
+
+  if (isPsih) {
+    html += renderPsihEntry(entry);
+  } else {
+    html += renderKarijerniEntry(entry);
   }
 
-  function toggleTest(key) {
-    TESTS[key] = !TESTS[key];
-    document.getElementById('chk-' + key).classList.toggle('selected', TESTS[key]);
-  }
+  html += '</div>';
+  return html;
+}
 
-  function selectAll() {
-    Object.keys(TESTS).forEach(k => { TESTS[k] = true; document.getElementById('chk-' + k).classList.add('selected'); });
-  }
+// ── PSIHOLOŠKI ────────────────────────────────────────
 
-  function deselectAll() {
-    Object.keys(TESTS).forEach(k => { TESTS[k] = false; document.getElementById('chk-' + k).classList.remove('selected'); });
-  }
+function renderPsihEntry(entry) {
+  const scores = entry.scores || {};
+  let html = '';
 
-  function generateLink() {
-    const name = document.getElementById('clientName').value.trim();
-    if (!name) return;
-
-    const selected = Object.keys(TESTS).filter(k => TESTS[k]);
-    if (!selected.length) { alert('Odaberite barem jedan test.'); return; }
-
-    const params = new URLSearchParams();
-    params.set('klijent', name);
-    params.set('testovi', selected.join(','));
-
-    const base = window.location.origin;
-    currentLink = `${base}/index.html?${params.toString()}`;
-
-    document.getElementById('generated-link').textContent = currentLink;
-    document.getElementById('result-section').style.display = 'block';
-    document.getElementById('btn-copy').textContent = 'Kopiraj link';
-    document.getElementById('btn-copy').classList.remove('copied');
-
-    // Save to history
-    const entry = {
-      name,
-      tests: selected,
-      date: new Date().toLocaleDateString('hr-HR'),
-      link: currentLink,
-    };
-    history.unshift(entry);
-    if (history.length > 20) history = history.slice(0, 20);
-    localStorage.setItem('therapist_history', JSON.stringify(history));
-    renderHistory();
-
-    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function copyLink() {
-    navigator.clipboard.writeText(currentLink).then(() => {
-      const btn = document.getElementById('btn-copy');
-      btn.textContent = '✓ Kopirano!';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = 'Kopiraj link';
-        btn.classList.remove('copied');
-      }, 2500);
+  // Big Five
+  if (scores.b5 && Object.keys(scores.b5).length) {
+    html += `<div class="section-label">Big Five · Ličnost</div>`;
+    Object.keys(scores.b5).forEach(k => {
+      html += `<div class="dim-row">
+        <span class="dim-label">${DIM_NAMES[k]}</span>
+        <div class="dim-track"><div class="dim-fill" style="width:${scores.b5[k]}%;background:${DIM_COLORS[k]}"></div></div>
+        <span class="dim-val">${scores.b5[k]}</span>
+      </div>`;
     });
+    html += '<hr class="divider">';
   }
 
-  function copyHistoryLink(link) {
-    navigator.clipboard.writeText(link).then(() => alert('Link kopiran!'));
+  // Attachment
+  if (scores.attach && Object.keys(scores.attach).length) {
+    const dom = Object.keys(scores.attach).sort((a,b) => scores.attach[b] - scores.attach[a])[0];
+    html += `<div class="section-label">Stilovi privrženosti</div>
+      <div class="score-grid">`;
+    Object.keys(scores.attach).forEach(k => {
+      html += `<div class="score-box">
+        <div class="score-box-name">${ATTACH_NAMES[k]}${k === dom ? ' ★' : ''}</div>
+        <div class="score-box-val">${scores.attach[k]}</div>
+      </div>`;
+    });
+    html += '</div><hr class="divider">';
   }
 
-  function renderHistory() {
-    const el = document.getElementById('history-list');
-    if (!history.length) {
-      el.innerHTML = '<p class="empty-state">Još nema generiranih linkova.</p>';
-      return;
-    }
-    el.innerHTML = history.map((h, i) => `
-      <div class="history-item">
-        <div>
-          <div class="history-name">${h.name}</div>
-          <div class="history-tests">${h.tests.map(t => TEST_NAMES[t]).join(', ')}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="history-date">${h.date}</span>
-          <button class="btn-small" onclick="copyHistoryLink('${h.link}')">Kopiraj</button>
-        </div>
-      </div>`).join('');
+  // Clinical scores
+  const clin = [];
+  if (scores.phq9 !== undefined) clin.push({ name: 'PHQ-9 · Depresija', val: scores.phq9, max: 27, ...phqLevel(scores.phq9) });
+  if (scores.gad7 !== undefined) clin.push({ name: 'GAD-7 · Anksioznost', val: scores.gad7, max: 21, ...gadLevel(scores.gad7) });
+  if (scores.rosenberg !== undefined) clin.push({ name: 'Rosenberg · Samopoštovanje', val: scores.rosenberg, max: 40, ...rosLevel(scores.rosenberg) });
+  if (scores.pcl5 !== undefined) clin.push({ name: 'PCL-5 · Trauma', val: scores.pcl5, max: 80, ...pclLevel(scores.pcl5) });
+  if (scores.npi16 !== undefined) clin.push({ name: 'NPI-16 · Narcisoidnost', val: scores.npi16, max: 16, ...npiLevel(scores.npi16) });
+
+  if (clin.length) {
+    html += `<div class="section-label">Klinički rezultati</div><div class="score-grid">`;
+    clin.forEach(r => {
+      html += `<div class="score-box">
+        <div class="score-box-name">${r.name}</div>
+        <div class="score-box-val ${r.cls === 'high' ? 'level-high' : 'level-ok'}">${r.val}<span style="font-size:11px;font-weight:400;color:var(--ink-muted)">/${r.max}</span></div>
+        <div class="score-box-level ${r.cls === 'high' ? 'level-high' : 'level-ok'}">${r.level}</div>
+      </div>`;
+    });
+    html += '</div><hr class="divider">';
   }
 
-  renderHistory();
+  // Red flags
+  if (entry.redFlags?.some(f => f)) {
+    html += `<div class="red-flags-box">
+      <div class="red-flag-title">Crvene zastavice</div>
+      ${entry.redFlags.filter(f => f).map(f => `<div class="red-flag-item">${f}</div>`).join('')}
+    </div>`;
+  }
+
+  // Therapist note
+  if (entry.therapistNote) {
+    html += `<div class="section-label" style="margin-top:0.75rem">Klinička napomena</div>
+      <div class="text-block">${entry.therapistNote}</div>`;
+  }
+
+  // Interpretation (collapsible)
+  if (entry.interpretation) {
+    const id = 'interp-' + Math.random().toString(36).slice(2);
+    html += `<button class="collapse-btn" onclick="toggle('${id}')">▾ Interpretacija za klijenta</button>
+      <div class="collapsible" id="${id}">
+        <div class="text-block" style="margin-top:0.5rem">${entry.interpretation}</div>
+      </div>`;
+  }
+
+  return html;
+}
+
+// ── KARIJERNI ─────────────────────────────────────────
+
+function renderKarijerniEntry(entry) {
+  let html = '';
+
+  // RIASEC
+  if (entry.riasec) {
+    html += `<div class="section-label">Holland RIASEC</div>`;
+    entry.riasec.split(', ').forEach(item => {
+      const [name, pct] = item.split(': ');
+      const val = parseInt(pct) || 0;
+      html += `<div class="riasec-row">
+        <div class="riasec-name">${name?.split('(')[0].trim()}</div>
+        <div class="riasec-track"><div class="riasec-fill" style="width:${val}%"></div></div>
+        <div class="riasec-val">${val}%</div>
+      </div>`;
+    });
+    html += '<hr class="divider">';
+  }
+
+  // Values
+  if (entry.values) {
+    html += `<div class="section-label">Top vrijednosti</div>
+      <div class="text-block" style="font-size:0.82rem">${entry.values.split('; ').map(v => `• ${v}`).join('<br>')}</div>
+      <hr class="divider">`;
+  }
+
+  // Anxiety
+  if (entry.anxiety) {
+    html += `<div class="section-label">Socijalna nelagoda</div>`;
+    entry.anxiety.split('; ').forEach(item => {
+      const parts = item.split(': ');
+      const name = parts[0];
+      const val = parseInt(parts[1]) || 0;
+      html += `<div class="riasec-row">
+        <div class="riasec-name" style="width:160px;font-size:11px">${name.split('/')[0].trim()}</div>
+        <div class="riasec-track"><div class="riasec-fill" style="width:${val}%;background:linear-gradient(90deg,#c94c4c,#e07070)"></div></div>
+        <div class="riasec-val">${val}%</div>
+      </div>`;
+    });
+    html += '<hr class="divider">';
+  }
+
+  // SWOT
+  if (entry.swot) {
+    const s = entry.swot;
+    html += `<div class="section-label">SWOT analiza</div>
+      <div class="swot-grid">
+        <div class="swot-box"><div class="swot-lbl s">Snage</div><div class="swot-text">${s.s || '—'}</div></div>
+        <div class="swot-box"><div class="swot-lbl w">Slabosti</div><div class="swot-text">${s.w || '—'}</div></div>
+        <div class="swot-box"><div class="swot-lbl o">Prilike</div><div class="swot-text">${s.o || '—'}</div></div>
+        <div class="swot-box"><div class="swot-lbl t">Prijetnje</div><div class="swot-text">${s.t || '—'}</div></div>
+      </div>`;
+    if (entry.interpretation) html += '<hr class="divider">';
+  }
+
+  // Interpretation
+  if (entry.interpretation) {
+    const id = 'interp-' + Math.random().toString(36).slice(2);
+    html += `<div class="section-label">AI interpretacija</div>
+      <div class="text-block">${entry.interpretation.substring(0, 300)}...</div>
+      <button class="collapse-btn" onclick="toggle('${id}')">▾ Prikaži cijelu interpretaciju</button>
+      <div class="collapsible" id="${id}">
+        <div class="text-block" style="margin-top:0.5rem">${entry.interpretation}</div>
+      </div>`;
+  }
+
+  return html;
+}
+
+// ── HELPERS ───────────────────────────────────────────
+
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+  const btn = el.previousElementSibling;
+  btn.textContent = el.classList.contains('open') ? '▴ Sakrij' : '▾ Prikaži cijelu interpretaciju';
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('hr-HR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function phqLevel(s) {
+  if (s >= 20) return { level: 'Teška depresija', cls: 'high' };
+  if (s >= 15) return { level: 'Umjereno teška', cls: 'high' };
+  if (s >= 10) return { level: 'Umjerena', cls: 'high' };
+  if (s >= 5) return { level: 'Blaga', cls: 'ok' };
+  return { level: 'Minimalna', cls: 'ok' };
+}
+function gadLevel(s) {
+  if (s >= 15) return { level: 'Teška anksioznost', cls: 'high' };
+  if (s >= 10) return { level: 'Umjerena', cls: 'high' };
+  if (s >= 5) return { level: 'Blaga', cls: 'ok' };
+  return { level: 'Minimalna', cls: 'ok' };
+}
+function rosLevel(s) {
+  if (s >= 35) return { level: 'Visoko samopoštovanje', cls: 'ok' };
+  if (s >= 23) return { level: 'Prosječno', cls: 'ok' };
+  return { level: 'Nisko samopoštovanje', cls: 'high' };
+}
+function pclLevel(s) {
+  return s >= 33 ? { level: 'Klinički značajno', cls: 'high' } : { level: 'Ispod praga', cls: 'ok' };
+}
+function npiLevel(s) {
+  if (s >= 14) return { level: 'Visoko', cls: 'high' };
+  if (s >= 10) return { level: 'Umjereno visoko', cls: 'high' };
+  if (s >= 5) return { level: 'Prosječno', cls: 'ok' };
+  return { level: 'Nisko', cls: 'ok' };
+}
+
+// ── INIT ──────────────────────────────────────────────
+loadClients();
 </script>
 </body>
 </html>
