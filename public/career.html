@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karijerni kompas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e0f;
+  --bg2: #161618;
+  --bg3: #1e1e21;
+  --border: #2a2a2e;
+  --border-light: #3a3a3f;
+  --text: #e8e6e0;
+  --text-soft: #9a9890;
+  --text-faint: #5a5855;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-dim: rgba(201,168,76,0.12);
+  --red: #c94c4c;
+  --green: #4caa6e;
+  --blue: #4c7ec9;
+  --radius: 6px;
+  --radius-lg: 14px;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.65;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+
+/* ── HEADER ── */
+.site-header {
+  padding: 3rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+}
+
+.header-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.site-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.site-header h1 em {
+  font-style: italic;
+  color: var(--gold-light);
+}
+
+.header-sub {
+  margin-top: 1rem;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  max-width: 520px;
+}
+
+/* ── PROGRESS ── */
+.progress-bar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 99px;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+/* ── SECTION ── */
+.section {
+  display: none;
+  animation: fadeUp 0.4s ease both;
+}
+.section.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  margin-bottom: 2rem;
+}
+
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.6rem;
+}
+
+.section-num::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.section-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.section-desc {
+  margin-top: 0.5rem;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+/* ── NAME INPUT ── */
+.name-wrap {
+  margin-bottom: 2rem;
+}
+
+.name-wrap label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 0.5rem;
+}
+
+.name-wrap input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.name-wrap input:focus { border-color: var(--gold); }
+.name-wrap input::placeholder { color: var(--text-faint); }
+
+/* ── QUESTION CARD ── */
+.q-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s;
+}
+
+.q-card:has(.option-btn.selected) { border-color: var(--border-light); }
+
+.q-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.q-num {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+/* ── OPTION BUTTONS ── */
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.option-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 0.45rem 1rem;
+  color: var(--text-soft);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.option-btn:hover { border-color: var(--border-light); color: var(--text); }
+.option-btn.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+/* ── SCALE ── */
+.scale-wrap {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.scale-label {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  min-width: 60px;
+}
+
+.scale-label.right { text-align: right; }
+
+.scale-btns {
+  display: flex;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.scale-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 44px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scale-btn:hover { border-color: var(--border-light); color: var(--text); }
+.scale-btn.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+/* ── SWOT ── */
+.swot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 520px) { .swot-grid { grid-template-columns: 1fr; } }
+
+.swot-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+.swot-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.swot-label.s { color: var(--green); }
+.swot-label.w { color: var(--red); }
+.swot-label.o { color: var(--blue); }
+.swot-label.t { color: #c97a4c; }
+
+.swot-hint {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.swot-box textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+
+.swot-box textarea:focus { border-color: var(--gold); }
+.swot-box textarea::placeholder { color: var(--text-faint); }
+
+/* ── NAV ── */
+.nav-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  align-items: center;
+}
+
+.btn-back {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1.5rem;
+  color: var(--text-soft);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-back:hover { border-color: var(--border-light); color: var(--text); }
+
+.btn-next {
+  flex: 1;
+  background: var(--gold);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.85rem 2rem;
+  color: #0e0e0f;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.btn-next:hover { background: var(--gold-light); transform: translateY(-1px); }
+.btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── LOADING ── */
+.loading-screen {
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.loading-icon {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-screen h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.loading-screen p { color: var(--text-soft); font-size: 0.9rem; }
+
+/* ── RESULTS ── */
+.results-header {
+  padding: 2.5rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.results-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.results-name {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.result-block {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-block-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+
+/* ── RIASEC CHART ── */
+.riasec-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.riasec-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.riasec-name {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.riasec-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.riasec-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 99px;
+  transition: width 1s ease;
+}
+
+.riasec-score {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  width: 28px;
+  text-align: right;
+}
+
+/* ── AI TEXT ── */
+.ai-text {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+/* ── SWOT RESULT ── */
+.swot-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 520px) { .swot-result-grid { grid-template-columns: 1fr; } }
+
+.swot-result-box {
+  background: var(--bg3);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.swot-result-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.swot-result-label.s { color: var(--green); }
+.swot-result-label.w { color: var(--red); }
+.swot-result-label.o { color: var(--blue); }
+.swot-result-label.t { color: #c97a4c; }
+
+.swot-result-text {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+/* ── EMAIL STATUS ── */
+.email-status {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+.email-status.ok { background: rgba(76,170,110,0.1); border: 1px solid rgba(76,170,110,0.3); color: var(--green); }
+.email-status.err { background: rgba(201,76,76,0.1); border: 1px solid rgba(201,76,76,0.3); color: var(--red); }
+
+.btn-restart {
+  margin-top: 2rem;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  color: var(--text-soft);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-restart:hover { border-color: var(--border-light); color: var(--text); }
+
+/* ── ERROR ── */
+.validation-msg {
+  background: rgba(201,76,76,0.1);
+  border: 1px solid rgba(201,76,76,0.2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  color: var(--red);
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  display: none;
+}
+.validation-msg.show { display: block; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="site-header">
+    <div class="header-eyebrow">Karijerni coaching</div>
+    <h1>Karijerni <em>kompas</em></h1>
+    <p class="header-sub">Upitnik za dublje razumijevanje vašeg karijernog profila, vrijednosti i smjera.</p>
+  </header>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- SECTION 0: Intro + ime -->
+  <div class="section active" id="s0">
+    <div class="section-header">
+      <div class="section-num">Početak</div>
+      <h2>Dobro došli</h2>
+      <p class="section-desc">Nema točnih ni pogrešnih odgovora. Odgovarajte iskreno — rezultati su povjerljivi i namijenjeni vašem coachu.</p>
+    </div>
+    <div class="name-wrap">
+      <label>Vaše ime (neobavezno)</label>
+      <input type="text" id="clientName" placeholder="Upišite ime ili ostavite prazno...">
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" onclick="goNext(0)">Počnimo →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Holland RIASEC -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">01 — Holland RIASEC</div>
+      <h2>Što vas privlači?</h2>
+      <p class="section-desc">Za svaku aktivnost odaberite koliko vam je privlačna (1 = uopće ne, 5 = jako privlačna).</p>
+    </div>
+
+    <div id="riasecQuestions"></div>
+
+    <div class="validation-msg" id="v1">Molimo odgovorite na sva pitanja prije nastavka.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(1)">← Natrag</button>
+      <button class="btn-next" onclick="goNext(1)">Dalje →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Vrijednosti -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">02 — Vrijednosti u karijeri</div>
+      <h2>Što je vama važno?</h2>
+      <p class="section-desc">Odaberite važnost svake vrijednosti za vas (1 = nevažno, 5 = iznimno važno).</p>
+    </div>
+
+    <div id="valuesQuestions"></div>
+
+    <div class="validation-msg" id="v2">Molimo odgovorite na sva pitanja prije nastavka.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(2)">← Natrag</button>
+      <button class="btn-next" onclick="goNext(2)">Dalje →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Socijalna anksioznost -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">03 — Socijalni aspekti rada</div>
+      <h2>Radne situacije</h2>
+      <p class="section-desc">Koliko vam sljedeće situacije na radnom mjestu pričinjavaju nelagodu? (1 = nimalo, 5 = jako puno)</p>
+    </div>
+
+    <div id="anxietyQuestions"></div>
+
+    <div class="validation-msg" id="v3">Molimo odgovorite na sva pitanja prije nastavka.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(3)">← Natrag</button>
+      <button class="btn-next" onclick="goNext(3)">Dalje →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 4: SWOT -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">04 — SWOT analiza</div>
+      <h2>Vaša karijerna slika</h2>
+      <p class="section-desc">Kratko opišite svoja razmišljanja u svakom kvadrantu. Pišite slobodno — nema pogrešnih odgovora.</p>
+    </div>
+
+    <div class="swot-grid">
+      <div class="swot-box">
+        <div class="swot-label s">Snage</div>
+        <div class="swot-hint">Što radite dobro? Koje vještine, znanja ili osobine imate?</div>
+        <textarea id="swotS" placeholder="npr. Dobra komunikacija, tehničko znanje, strpljenje..."></textarea>
+      </div>
+      <div class="swot-box">
+        <div class="swot-label w">Slabosti</div>
+        <div class="swot-hint">Što vas koči? Gdje vidite prostor za rast?</div>
+        <textarea id="swotW" placeholder="npr. Teško mi je reći ne, izbjegavam konflikte..."></textarea>
+      </div>
+      <div class="swot-box">
+        <div class="swot-label o">Prilike</div>
+        <div class="swot-hint">Koje prilike vidite u tržištu ili svom okruženju?</div>
+        <textarea id="swotO" placeholder="npr. Rast IT sektora, EU fondovi, kontakti iz branše..."></textarea>
+      </div>
+      <div class="swot-box">
+        <div class="swot-label t">Prijetnje</div>
+        <div class="swot-hint">Što vas brine? Koji su vanjski faktori rizik?</div>
+        <textarea id="swotT" placeholder="npr. Nesigurnost tržišta, AI automatizacija..."></textarea>
+      </div>
+    </div>
+
+    <div class="validation-msg" id="v4">Molimo ispunite barem jedno polje SWOT analize.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(4)">← Natrag</button>
+      <button class="btn-next" onclick="goNext(4)">Generiraj profil →</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="section" id="sLoading">
+    <div class="loading-screen">
+      <div class="loading-icon"></div>
+      <h3>Analiziram vaš profil...</h3>
+      <p>Nekoliko sekundi dok pripremam vašu interpretaciju.</p>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="section" id="sResults">
+    <div class="results-header">
+      <h2>Vaš karijerni profil</h2>
+      <div class="results-name" id="resultsName"></div>
+    </div>
+
+    <!-- RIASEC chart -->
+    <div class="result-block">
+      <div class="result-block-label">Holland RIASEC — dominantni tipovi</div>
+      <div class="riasec-bars" id="riasecChart"></div>
+    </div>
+
+    <!-- Vrijednosti -->
+    <div class="result-block">
+      <div class="result-block-label">Top karijernih vrijednosti</div>
+      <div class="riasec-bars" id="valuesChart"></div>
+    </div>
+
+    <!-- Socijalna anksioznost -->
+    <div class="result-block">
+      <div class="result-block-label">Socijalni profil rada</div>
+      <div class="riasec-bars" id="anxietyChart"></div>
+    </div>
+
+    <!-- SWOT prikaz -->
+    <div class="result-block">
+      <div class="result-block-label">SWOT analiza</div>
+      <div class="swot-result-grid" id="swotResult"></div>
+    </div>
+
+    <!-- AI interpretacija -->
+    <div class="result-block">
+      <div class="result-block-label">Interpretacija profila</div>
+      <div class="ai-text" id="aiText">Učitavam...</div>
+    </div>
+
+    <div id="emailStatus"></div>
+    <button class="btn-restart" onclick="restart()">↺ Ispuni ponovo</button>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+emailjs.init('2Oj2zHu81YpB4REAX');
+
+// ── DATA ──────────────────────────────────────────────
+
+const riasecItems = [
+  { q: 'Popravljati, graditi ili sklapati stvari rukama', dim: 'R' },
+  { q: 'Raditi s alatima, strojevima ili tehničkom opremom', dim: 'R' },
+  { q: 'Rješavati logičke ili matematičke probleme', dim: 'I' },
+  { q: 'Istraživati, analizirati podatke, provoditi eksperimente', dim: 'I' },
+  { q: 'Crtati, pisati, stvarati glazbu ili nešto kreativno', dim: 'A' },
+  { q: 'Osmišljavati nove ideje, dizajn ili koncepte', dim: 'A' },
+  { q: 'Pomagati drugima, educirati ili savjetovati', dim: 'S' },
+  { q: 'Raditi u timu i surađivati s ljudima', dim: 'S' },
+  { q: 'Voditi projekte, pregovarati, uvjeravati', dim: 'E' },
+  { q: 'Postavljati ciljeve i motivirati druge', dim: 'E' },
+  { q: 'Organizirati, voditi evidenciju, raditi po pravilima', dim: 'C' },
+  { q: 'Raditi precizno i metodično prema uputama', dim: 'C' },
+];
+
+const riasecNames = {
+  R: 'Realistični (praktičar)',
+  I: 'Istraživački (analitičar)',
+  A: 'Artistički (kreativac)',
+  S: 'Socijalni (pomagač)',
+  E: 'Poduzetnički (lider)',
+  C: 'Konvencionalni (organizator)',
+};
+
+const valuesItems = [
+  { q: 'Sigurnost zaposlenja i stabilnost prihoda', key: 'sigurnost' },
+  { q: 'Autonomija — samostalno odlučivanje o svom radu', key: 'autonomija' },
+  { q: 'Kreativnost i inovativnost u svakodnevnom poslu', key: 'kreativnost' },
+  { q: 'Visok prihod i financijski napredak', key: 'prihod' },
+  { q: 'Ravnoteža posla i privatnog života', key: 'balans' },
+  { q: 'Mogućnost učenja i profesionalnog razvoja', key: 'razvoj' },
+  { q: 'Društveni utjecaj — osjećaj da moj rad pomaže drugima', key: 'utjecaj' },
+  { q: 'Status i prepoznatost u struci', key: 'status' },
+  { q: 'Rad s kompetentnim i motiviranim timom', key: 'tim' },
+  { q: 'Fleksibilnost — rad od kuće, fleksibilno radno vrijeme', key: 'fleksibilnost' },
+];
+
+const anxietyItems = [
+  { q: 'Javni nastup ili prezentacija pred skupinom', key: 'prezentacija' },
+  { q: 'Razgovor za posao / intervju', key: 'intervju' },
+  { q: 'Networking — upoznavanje novih poslovnih kontakata', key: 'networking' },
+  { q: 'Izražavanje neslaganja ili kritike nadređenom', key: 'konflikt' },
+  { q: 'Sudjelovanje u sastancima i iznošenje mišljenja', key: 'sastanci' },
+  { q: 'Traženje povišice ili boljeg položaja', key: 'pregovaranje' },
+  { q: 'Rad u open-space uredu s puno kolega', key: 'openspace' },
+];
+
+// ── STATE ─────────────────────────────────────────────
+
+let riasecAnswers = {};
+let valuesAnswers = {};
+let anxietyAnswers = {};
+let swotData = {};
+let currentSection = 0;
+
+// ── RENDER QUESTIONS ──────────────────────────────────
+
+function renderScale(items, answersObj, containerId, prefix) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  items.forEach((item, i) => {
+    const key = item.dim || item.key;
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.innerHTML = `
+      <div class="q-num">${i + 1} / ${items.length}</div>
+      <div class="q-text">${item.q}</div>
+      <div class="scale-wrap">
+        <span class="scale-label">Nimalo</span>
+        <div class="scale-btns">
+          ${[1,2,3,4,5].map(v => `<button class="scale-btn ${answersObj[prefix+i] == v ? 'selected' : ''}" onclick="setAnswer('${prefix}', ${i}, ${v}, '${key}', '${prefix+i}', this)">${v}</button>`).join('')}
+        </div>
+        <span class="scale-label right">Jako</span>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function setAnswer(prefix, idx, val, key, uid, btn) {
+  const store = prefix === 'r' ? riasecAnswers : prefix === 'v' ? valuesAnswers : anxietyAnswers;
+  store[uid] = val;
+  store['_key_' + idx] = { key, val };
+  // update buttons
+  btn.closest('.scale-btns').querySelectorAll('.scale-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i + 1 === val);
+  });
+}
+
+function initQuestions() {
+  renderScale(riasecItems, riasecAnswers, 'riasecQuestions', 'r');
+  renderScale(valuesItems, valuesAnswers, 'valuesQuestions', 'v');
+  renderScale(anxietyItems, anxietyAnswers, 'anxietyQuestions', 'a');
+}
+
+initQuestions();
+
+// ── NAVIGATION ────────────────────────────────────────
+
+function updateProgress() {
+  const pct = (currentSection / 5) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goNext(from) {
+  // Validate
+  if (from === 1) {
+    if (Object.keys(riasecAnswers).filter(k => !k.startsWith('_')).length < riasecItems.length) {
+      document.getElementById('v1').classList.add('show'); return;
+    }
+    document.getElementById('v1').classList.remove('show');
+  }
+  if (from === 2) {
+    if (Object.keys(valuesAnswers).filter(k => !k.startsWith('_')).length < valuesItems.length) {
+      document.getElementById('v2').classList.add('show'); return;
+    }
+    document.getElementById('v2').classList.remove('show');
+  }
+  if (from === 3) {
+    if (Object.keys(anxietyAnswers).filter(k => !k.startsWith('_')).length < anxietyItems.length) {
+      document.getElementById('v3').classList.add('show'); return;
+    }
+    document.getElementById('v3').classList.remove('show');
+  }
+  if (from === 4) {
+    const s = document.getElementById('swotS').value.trim();
+    const w = document.getElementById('swotW').value.trim();
+    const o = document.getElementById('swotO').value.trim();
+    const t = document.getElementById('swotT').value.trim();
+    if (!s && !w && !o && !t) { document.getElementById('v4').classList.add('show'); return; }
+    document.getElementById('v4').classList.remove('show');
+    swotData = { s, w, o, t };
+    submitAll();
+    return;
+  }
+
+  currentSection = from + 1;
+  updateProgress();
+  showSection('s' + currentSection);
+  window.scrollTo(0, 0);
+}
+
+function goBack(from) {
+  currentSection = from - 1;
+  updateProgress();
+  showSection('s' + currentSection);
+  window.scrollTo(0, 0);
+}
+
+// ── COMPUTE SCORES ────────────────────────────────────
+
+function computeRiasec() {
+  const totals = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const counts = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  riasecItems.forEach((item, i) => {
+    const val = riasecAnswers['r' + i] || 0;
+    totals[item.dim] += val;
+    counts[item.dim]++;
+  });
+  return Object.keys(totals).map(k => ({
+    key: k,
+    name: riasecNames[k],
+    avg: counts[k] ? (totals[k] / counts[k] / 5 * 100).toFixed(0) : 0,
+  })).sort((a, b) => b.avg - a.avg);
+}
+
+function computeValues() {
+  return valuesItems.map((item, i) => ({
+    name: item.q,
+    score: ((valuesAnswers['v' + i] || 0) / 5 * 100).toFixed(0),
+  })).sort((a, b) => b.score - a.score).slice(0, 5);
+}
+
+function computeAnxiety() {
+  return anxietyItems.map((item, i) => ({
+    name: item.q,
+    score: ((anxietyAnswers['a' + i] || 0) / 5 * 100).toFixed(0),
+  })).sort((a, b) => b.score - a.score);
+}
+
+// ── SUBMIT ────────────────────────────────────────────
+
+async function submitAll() {
+  showSection('sLoading');
+  window.scrollTo(0, 0);
+
+  const name = document.getElementById('clientName').value.trim() || 'Anonimni klijent';
+  const riasec = computeRiasec();
+  const values = computeValues();
+  const anxiety = computeAnxiety();
+
+  // Build text summaries for AI
+  const riasecText = riasec.map(r => `${r.name}: ${r.avg}%`).join(', ');
+  const valuesText = values.map(v => `${v.name} (${v.score}%)`).join('; ');
+  const anxietyText = anxiety.map(a => `${a.name}: ${a.score}%`).join('; ');
+  const swotText = `Snage: ${swotData.s || '-'}\nSlabosti: ${swotData.w || '-'}\nPrilike: ${swotData.o || '-'}\nPrijetnje: ${swotData.t || '-'}`;
+
+  // Call Claude API
+  let interpretation = '';
+  try {
+    const prompt = `Si iskusni karijerni coach koji piše na hrvatskom jeziku. Na temelju podataka klijenta napiši toplu, konkretnu i korisnu interpretaciju karijernog profila za klijenta (3-5 paragrafa, bez stručnog žargona).
+
+Klijent: ${name}
+
+Holland RIASEC rezultati: ${riasecText}
+
+Top karijernih vrijednosti: ${valuesText}
+
+Socijalna nelagoda u radnim situacijama: ${anxietyText}
+
+SWOT analiza:
+${swotText}
+
+Na temelju ovih podataka:
+1. Opišite dominantni karijerni tip klijenta i što to znači u praksi
+2. Istaknite ključne vrijednosti i kako ih uklopiti u karijerni izbor
+3. Komentirajte socijalnu dimenziju — u kakvom okruženju bi ovaj klijent bio uspješniji
+4. Završite s jednim konkretnim karijernim smjerom ili preporukom za istraživanje
+
+Piši direktno klijentu (u drugom licu).`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    const data = await res.json();
+    interpretation = data.content?.[0]?.text || 'Interpretacija nije dostupna.';
+  } catch (e) {
+    interpretation = 'Interpretacija trenutno nije dostupna. Vaš coach će vas kontaktirati s detaljnom analizom.';
+  }
+
+  // Send email
+  let emailOk = false;
+  try {
+    await emailjs.send('service_phwb8mv', 'template_2xcu5by', {
+      client_name: name,
+      date: new Date().toLocaleDateString('hr-HR'),
+      riasec: riasecText,
+      values: valuesText,
+      anxiety: anxietyText,
+      swot: swotText,
+      analysis: interpretation,
+    });
+    emailOk = true;
+  } catch (e) { emailOk = false; }
+
+  // Show results
+  showResults(name, riasec, values, anxiety, interpretation, emailOk);
+}
+
+// ── SHOW RESULTS ──────────────────────────────────────
+
+function showResults(name, riasec, values, anxiety, interpretation, emailOk) {
+  document.getElementById('resultsName').textContent = name !== 'Anonimni klijent' ? `Profil za: ${name}` : '';
+
+  // RIASEC chart
+  const rc = document.getElementById('riasecChart');
+  rc.innerHTML = riasec.map(r => `
+    <div class="riasec-row">
+      <div class="riasec-name">${r.name.split(' ')[0]}</div>
+      <div class="riasec-bar-bg"><div class="riasec-bar-fill" style="width:0%" data-w="${r.avg}%"></div></div>
+      <div class="riasec-score">${r.avg}%</div>
+    </div>`).join('');
+
+  // Values chart
+  const vc = document.getElementById('valuesChart');
+  vc.innerHTML = values.map(v => `
+    <div class="riasec-row">
+      <div class="riasec-name" style="width:180px;font-size:0.75rem">${v.name.split('—')[0].split('(')[0].trim()}</div>
+      <div class="riasec-bar-bg"><div class="riasec-bar-fill" style="width:0%" data-w="${v.score}%"></div></div>
+      <div class="riasec-score">${v.score}%</div>
+    </div>`).join('');
+
+  // Anxiety chart
+  const ac = document.getElementById('anxietyChart');
+  ac.innerHTML = anxiety.map(a => `
+    <div class="riasec-row">
+      <div class="riasec-name" style="width:180px;font-size:0.75rem">${a.name.split('/')[0].trim()}</div>
+      <div class="riasec-bar-bg"><div class="riasec-bar-fill" style="width:0%;background:linear-gradient(90deg,#c94c4c,#e07070)" data-w="${a.score}%"></div></div>
+      <div class="riasec-score">${a.score}%</div>
+    </div>`).join('');
+
+  // SWOT
+  document.getElementById('swotResult').innerHTML = `
+    <div class="swot-result-box"><div class="swot-result-label s">Snage</div><div class="swot-result-text">${swotData.s || '—'}</div></div>
+    <div class="swot-result-box"><div class="swot-result-label w">Slabosti</div><div class="swot-result-text">${swotData.w || '—'}</div></div>
+    <div class="swot-result-box"><div class="swot-result-label o">Prilike</div><div class="swot-result-text">${swotData.o || '—'}</div></div>
+    <div class="swot-result-box"><div class="swot-result-label t">Prijetnje</div><div class="swot-result-text">${swotData.t || '—'}</div></div>`;
+
+  // AI text
+  document.getElementById('aiText').textContent = interpretation;
+
+  // Email status
+  document.getElementById('emailStatus').innerHTML = emailOk
+    ? `<div class="email-status ok">✓ Rezultati su uspješno poslani vašem coachu.</div>`
+    : `<div class="email-status err">Slanje emaila nije uspjelo. Coach će dobiti rezultate na sesiji.</div>`;
+
+  currentSection = 5;
+  updateProgress();
+  showSection('sResults');
+  window.scrollTo(0, 0);
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.riasec-bar-fill[data-w]').forEach(bar => {
+      bar.style.width = bar.dataset.w;
+    });
+  }, 100);
+}
+
+function restart() {
+  riasecAnswers = {};
+  valuesAnswers = {};
+  anxietyAnswers = {};
+  swotData = {};
+  currentSection = 0;
+  document.getElementById('clientName').value = '';
+  document.getElementById('swotS').value = '';
+  document.getElementById('swotW').value = '';
+  document.getElementById('swotO').value = '';
+  document.getElementById('swotT').value = '';
+  initQuestions();
+  updateProgress();
+  showSection('s0');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
