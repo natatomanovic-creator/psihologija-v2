@@ -962,37 +962,23 @@ async function submitAll() {
   const anxietyText = anxiety.map(a => `${a.name}: ${a.score}%`).join('; ');
   const swotText = `Snage: ${swotData.s || '-'}\nSlabosti: ${swotData.w || '-'}\nPrilike: ${swotData.o || '-'}\nPrijetnje: ${swotData.t || '-'}`;
 
-  // Call Netlify function for AI interpretation
+  // Call Netlify function for AI interpretation (with timeout)
   let interpretation = '';
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 sec timeout
     const res = await fetch('/.netlify/functions/career-interpret', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clientName: name, riasecText, valuesText, anxietyText, swotData }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
     interpretation = data.interpretation || 'Interpretacija nije dostupna.';
   } catch (e) {
     interpretation = 'Interpretacija trenutno nije dostupna. Vaš coach će vas kontaktirati s detaljnom analizom.';
   }
-
-  // Save to Netlify Blobs
-  try {
-    await fetch('/.netlify/functions/save-result', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'karijerni',
-        clientName: name,
-        date: new Date().toISOString(),
-        riasec: riasecText,
-        values: valuesText,
-        anxiety: anxietyText,
-        swot: swotData,
-        interpretation,
-      }),
-    });
-  } catch(e) { /* silent fail */ }
 
   // Send email
   let emailOk = false;
