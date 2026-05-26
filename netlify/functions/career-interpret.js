@@ -31,7 +31,11 @@ Format (SAMO JSON, bez komentara):
     let coachNote = '';
 
     try {
-      const parsed = JSON.parse(message.content[0].text);
+      const raw = message.content[0].text
+        .replace(/```json\s*/gi, '')
+        .replace(/```\s*/gi, '')
+        .trim();
+      const parsed = JSON.parse(raw);
       interpretation = parsed.client || '';
       coachNote = parsed.coach || '';
     } catch(e) {
