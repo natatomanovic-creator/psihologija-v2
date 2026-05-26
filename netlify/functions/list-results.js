@@ -2,10 +2,14 @@ const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event) => {
   try {
-    const store = getStore('results');
+    const store = getStore({
+      name: 'results',
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_BLOBS_TOKEN,
+    });
+
     const params = event.queryStringParameters || {};
 
-    // Get single client
     if (params.client) {
       const data = await store.get(params.client, { type: 'json' });
       return {
@@ -15,7 +19,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // List all clients
     const { blobs } = await store.list();
     const clients = [];
     for (const blob of blobs) {

@@ -7,18 +7,20 @@ exports.handler = async (event) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { clientName, date } = data;
+    const { clientName } = data;
 
-    // Normalize client key: "Ana K." -> "ana-k"
     const clientKey = clientName
       .toLowerCase()
       .replace(/\./g, '')
       .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9\-čćšžđ]/g, '');
+      .replace(/[^a-z0-9\-]/g, '');
 
-    const store = getStore('results');
+    const store = getStore({
+      name: 'results',
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_BLOBS_TOKEN,
+    });
 
-    // Load existing client data or start fresh
     let clientData;
     try {
       const existing = await store.get(clientKey, { type: 'json' });
@@ -27,7 +29,6 @@ exports.handler = async (event) => {
       clientData = { name: clientName, entries: [] };
     }
 
-    // Add new entry
     clientData.entries.push({
       ...data,
       savedAt: new Date().toISOString(),
