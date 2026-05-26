@@ -964,6 +964,7 @@ async function submitAll() {
 
   // Call Netlify function for AI interpretation (with timeout)
   let interpretation = '';
+  let coachNote = '';
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 sec timeout
@@ -976,6 +977,7 @@ async function submitAll() {
     clearTimeout(timeoutId);
     const data = await res.json();
     interpretation = data.interpretation || 'Interpretacija nije dostupna.';
+    coachNote = data.coachNote || '';
   } catch (e) {
     interpretation = 'Interpretacija trenutno nije dostupna. Vaš coach će vas kontaktirati s detaljnom analizom.';
   }
@@ -989,8 +991,12 @@ async function submitAll() {
       riasec: riasecText,
       values: valuesText,
       anxiety: anxietyText,
-      swot: swotText,
+      swot_s: swotData.s || '-',
+      swot_w: swotData.w || '-',
+      swot_o: swotData.o || '-',
+      swot_t: swotData.t || '-',
       analysis: interpretation,
+      coach_note: coachNote,
     });
     emailOk = true;
   } catch (e) { emailOk = false; }
