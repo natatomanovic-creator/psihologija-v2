@@ -982,6 +982,25 @@ async function submitAll() {
     interpretation = 'Interpretacija trenutno nije dostupna. Vaš coach će vas kontaktirati s detaljnom analizom.';
   }
 
+  // Save to Netlify Blobs
+  try {
+    await fetch('/.netlify/functions/save-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'karijerni',
+        clientName: name,
+        date: new Date().toISOString(),
+        riasec: riasecText,
+        values: valuesText,
+        anxiety: anxietyText,
+        swot: swotData,
+        interpretation,
+        coachNote,
+      }),
+    });
+  } catch(e) { /* silent fail */ }
+
   // Send email
   let emailOk = false;
   try {

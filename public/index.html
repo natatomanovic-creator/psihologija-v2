@@ -554,6 +554,21 @@ async function computeAndFetch() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     aiResult = data;
+    // Save to Blobs
+    fetch('/.netlify/functions/save-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'psihološki',
+        clientName,
+        date: new Date().toISOString(),
+        scores,
+        interpretation: data.client_text || '',
+        therapistNote: data.therapist_text || '',
+        redFlags: data.red_flags || [],
+        priority: data.priority || '',
+      }),
+    }).catch(() => {});
     renderResults(scores, clientName, data);
   } catch(err) {
     aiResult = null;
